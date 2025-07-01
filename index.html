@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>营脚煤矿高位钻孔数据分析系统111</title>
+    <title>营脚煤矿高位钻孔数据分析系统</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.1.0/dist/chartjs-plugin-annotation.min.js"></script>
@@ -828,6 +828,7 @@
                         <ul>
                             <li>高位钻孔：可选择"单孔显示"或"整组显示"</li>
                             <li>顺层钻孔：可选择"单孔显示"或"单元显示"</li>
+                            <li>穿层钻孔：可选择"单孔显示"、"单元显示"或"组数显示"</li>
                         </ul>
                     </li>
                     <li><strong>数据展示：</strong>
@@ -1306,7 +1307,7 @@
             drillSelect.innerHTML = '<option value="">-- 请选择钻孔或组 --</option>';
         }
         
-        // 填充钻孔选择框
+        // 填充钻孔选择框 - 根据业务逻辑更新
         function populateDrillSelect() {
             const drillType = drillTypeSelect.value;
             const region = regionSelect.value;
@@ -1327,40 +1328,99 @@
                     return true;
                 });
             
-            if (displayMode === 'single') {
-                // 单孔显示模式 - 显示单个钻孔编号
-                filteredDrills.forEach(([drillId]) => {
-                    const option = document.createElement('option');
-                    option.value = drillId;
-                    option.textContent = drillId;
-                    drillSelect.appendChild(option);
-                });
-            } else if (displayMode === 'group') {
-                // 整组显示模式 - 显示组数
-                const uniqueGroups = new Set();
-                filteredDrills.forEach(([_, drill]) => {
-                    uniqueGroups.add(drill.group);
-                });
-                
-                Array.from(uniqueGroups).sort().forEach(group => {
-                    const option = document.createElement('option');
-                    option.value = group;
-                    option.textContent = `第${group}组`;
-                    drillSelect.appendChild(option);
-                });
-            } else if (displayMode === 'unit') {
-                // 单元显示模式 - 显示单元名称
-                const uniqueUnits = new Set();
-                filteredDrills.forEach(([_, drill]) => {
-                    uniqueUnits.add(drill.unit);
-                });
-                
-                Array.from(uniqueUnits).sort().forEach(unit => {
-                    const option = document.createElement('option');
-                    option.value = unit;
-                    option.textContent = unit;
-                    drillSelect.appendChild(option);
-                });
+            // 应用业务逻辑筛选
+            if (drillType === '顺层钻孔') {
+                if (region === '12802回风巷' || region === '12802运输巷') {
+                    if (unit === '一单元') {
+                        if (displayMode === 'single') {
+                            // 单孔显示 - 显示钻孔编号
+                            filteredDrills.forEach(([drillId]) => {
+                                const option = document.createElement('option');
+                                option.value = drillId;
+                                option.textContent = drillId;
+                                drillSelect.appendChild(option);
+                            });
+                        } else if (displayMode === 'unit') {
+                            // 单元显示 - 显示单元名称
+                            const uniqueUnits = new Set();
+                            filteredDrills.forEach(([_, drill]) => {
+                                uniqueUnits.add(drill.unit);
+                            });
+                            
+                            Array.from(uniqueUnits).sort().forEach(unit => {
+                                const option = document.createElement('option');
+                                option.value = unit;
+                                option.textContent = unit;
+                                drillSelect.appendChild(option);
+                            });
+                        }
+                    }
+                }
+            } else if (drillType === '高位钻孔') {
+                if (region === '12802回风巷' || region === '12802运输巷') {
+                    if (displayMode === 'single') {
+                        // 单孔显示 - 显示钻孔编号
+                        filteredDrills.forEach(([drillId]) => {
+                            const option = document.createElement('option');
+                            option.value = drillId;
+                            option.textContent = drillId;
+                            drillSelect.appendChild(option);
+                        });
+                    } else if (displayMode === 'group') {
+                        // 整组显示 - 显示组数
+                        const uniqueGroups = new Set();
+                        filteredDrills.forEach(([_, drill]) => {
+                            uniqueGroups.add(drill.group);
+                        });
+                        
+                        Array.from(uniqueGroups).sort().forEach(group => {
+                            const option = document.createElement('option');
+                            option.value = group;
+                            option.textContent = `第${group}组`;
+                            drillSelect.appendChild(option);
+                        });
+                    }
+                }
+            } else if (drillType === '穿层钻孔') {
+                if (region === '12803回风底抽巷') {
+                    if (unit === '一单元') {
+                        if (displayMode === 'single') {
+                            // 单孔显示 - 显示钻孔编号
+                            filteredDrills.forEach(([drillId]) => {
+                                const option = document.createElement('option');
+                                option.value = drillId;
+                                option.textContent = drillId;
+                                drillSelect.appendChild(option);
+                            });
+                        } else if (displayMode === 'unit') {
+                            // 单元显示 - 显示单元名称
+                            const uniqueUnits = new Set();
+                            filteredDrills.forEach(([_, drill]) => {
+                                uniqueUnits.add(drill.unit);
+                            });
+                            
+                            Array.from(uniqueUnits).sort().forEach(unit => {
+                                const option = document.createElement('option');
+                                option.value = unit;
+                                option.textContent = unit;
+                                drillSelect.appendChild(option);
+                            });
+                        } else if (displayMode === 'group') {
+                            // 组数显示 - 显示组数
+                            const uniqueGroups = new Set();
+                            filteredDrills.forEach(([_, drill]) => {
+                                uniqueGroups.add(drill.group);
+                            });
+                            
+                            Array.from(uniqueGroups).sort().forEach(group => {
+                                const option = document.createElement('option');
+                                option.value = group;
+                                option.textContent = `第${group}组`;
+                                drillSelect.appendChild(option);
+                            });
+                        }
+                    }
+                }
             }
         }
         
