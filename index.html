@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>营脚煤矿高位钻孔数据分析系统2222</title>
+    <title>营脚煤矿高位钻孔数据分析系统333</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.1.0/dist/chartjs-plugin-annotation.min.js"></script>
@@ -836,6 +836,7 @@
                             <li>单孔显示：展示单个钻孔的所有数据</li>
                             <li>整组显示：使用不同颜色曲线显示同组钻孔数据</li>
                             <li>单元显示：展示整个抽采单元的数据</li>
+                            <li>组数显示：按组数展示数据</li>
                         </ul>
                     </li>
                     <li><strong>统计图表：</strong>
@@ -923,9 +924,7 @@
                     <label for="display-mode"><i class="fas fa-desktop"></i> 显示方式</label>
                     <select id="display-mode">
                         <option value="">-- 请选择显示方式 --</option>
-                        <option value="single">单孔显示</option>
-                        <option value="group">整组显示</option>
-                        <option value="unit">单元显示</option>
+                        <!-- 动态填充 -->
                     </select>
                 </div>
                 
@@ -1091,7 +1090,7 @@
         <div class="info-text">
             <strong><i class="fas fa-info-circle"></i> 使用说明：</strong>
             <p><i class="fas fa-check"></i> 系统提供四级筛选功能：钻孔性质 → 抽采区域 → 抽采单元 → 显示方式</p>
-            <p><i class="fas fa-check"></i> 高位钻孔只能选择单孔或整组显示；顺层钻孔可选择单孔或单元显示</p>
+            <p><i class="fas fa-check"></i> 高位钻孔只能选择单孔或整组显示；顺层钻孔可选择单孔或单元显示；穿层钻孔可选择单孔、单元或组数显示</p>
             <p><i class="fas fa-check"></i> 整组显示时，曲线使用不同颜色区分同组钻孔</p>
             <p><i class="fas fa-check"></i> 扇形图展示初始浓度50%以上钻孔的比例和倾角分布</p>
             <p><i class="fas fa-check"></i> 表格新增始抽时间、始抽浓度、始抽负压三列数据</p>
@@ -1151,7 +1150,7 @@
         let drillIds = [];
         
         // CSV文件路径
-        const CSV_FILE_PATH = 'data.csv';
+        const CSV_FILE_PATH = '工作簿2.csv';
         
         // 获取今天的日期（YYYY-MM-DD格式）
         function getTodayDate() {
@@ -1188,6 +1187,9 @@
                 const line = lines[i].trim();
                 if (!line) continue;
                 
+                // 跳过空行或无效行
+                if (line.split(',').every(val => val === '')) continue;
+                
                 const values = line.split(',');
                 const entry = {};
                 
@@ -1205,7 +1207,7 @@
                 }
                 
                 // 确保数据完整
-                if (Object.keys(entry).length === headers.length) {
+                if (Object.keys(entry).length === headers.length && entry['钻孔编号']) {
                     data.push(entry);
                 }
             }
@@ -1307,7 +1309,31 @@
             drillSelect.innerHTML = '<option value="">-- 请选择钻孔或组 --</option>';
         }
         
-        // 填充钻孔选择框 - 根据业务逻辑更新
+        // 更新显示方式选项
+        function updateDisplayModeOptions() {
+            const drillType = drillTypeSelect.value;
+            displayModeSelect.innerHTML = '<option value="">-- 请选择显示方式 --</option>';
+            
+            if (drillType === '顺层钻孔') {
+                displayModeSelect.innerHTML += `
+                    <option value="single">单孔显示</option>
+                    <option value="unit">单元显示</option>
+                `;
+            } else if (drillType === '高位钻孔') {
+                displayModeSelect.innerHTML += `
+                    <option value="single">单孔显示</option>
+                    <option value="group">整组显示</option>
+                `;
+            } else if (drillType === '穿层钻孔') {
+                displayModeSelect.innerHTML += `
+                    <option value="single">单孔显示</option>
+                    <option value="unit">单元显示</option>
+                    <option value="group">组数显示</option>
+                `;
+            }
+        }
+        
+        // 填充钻孔选择框
         function populateDrillSelect() {
             const drillType = drillTypeSelect.value;
             const region = regionSelect.value;
@@ -1317,110 +1343,56 @@
             drillSelect.innerHTML = '<option value="">-- 请选择钻孔或组 --</option>';
             
             // 如果没有选择显示方式，返回空
-            if (!displayMode) return;
+            if (!displayMode || !drillType || !region) return;
             
             // 获取符合条件的钻孔
             const filteredDrills = Object.entries(allDrillData)
                 .filter(([drillId, drill]) => {
-                    if (drillType && drill.drillType !== drillType) return false;
-                    if (region && drill.region !== region) return false;
-                    if (unit && drill.unit !== unit) return false;
+                    if (drillType !== drill.drillType) return false;
+                    if (region !== drill.region) return false;
+                    
+                    // 对于顺层钻孔和穿层钻孔，需要匹配抽采单元
+                    if ((drillType === '顺层钻孔' || drillType === '穿层钻孔') && unit && unit !== drill.unit) {
+                        return false;
+                    }
+                    
                     return true;
                 });
             
-            // 应用业务逻辑筛选
-            if (drillType === '顺层钻孔') {
-                if (region === '12802回风巷' || region === '12802运输巷') {
-                    if (unit === '一单元') {
-                        if (displayMode === 'single') {
-                            // 单孔显示 - 显示钻孔编号
-                            filteredDrills.forEach(([drillId]) => {
-                                const option = document.createElement('option');
-                                option.value = drillId;
-                                option.textContent = drillId;
-                                drillSelect.appendChild(option);
-                            });
-                        } else if (displayMode === 'unit') {
-                            // 单元显示 - 显示单元名称
-                            const uniqueUnits = new Set();
-                            filteredDrills.forEach(([_, drill]) => {
-                                uniqueUnits.add(drill.unit);
-                            });
-                            
-                            Array.from(uniqueUnits).sort().forEach(unit => {
-                                const option = document.createElement('option');
-                                option.value = unit;
-                                option.textContent = unit;
-                                drillSelect.appendChild(option);
-                            });
-                        }
-                    }
-                }
-            } else if (drillType === '高位钻孔') {
-                if (region === '12802回风巷' || region === '12802运输巷') {
-                    if (displayMode === 'single') {
-                        // 单孔显示 - 显示钻孔编号
-                        filteredDrills.forEach(([drillId]) => {
-                            const option = document.createElement('option');
-                            option.value = drillId;
-                            option.textContent = drillId;
-                            drillSelect.appendChild(option);
-                        });
-                    } else if (displayMode === 'group') {
-                        // 整组显示 - 显示组数
-                        const uniqueGroups = new Set();
-                        filteredDrills.forEach(([_, drill]) => {
-                            uniqueGroups.add(drill.group);
-                        });
-                        
-                        Array.from(uniqueGroups).sort().forEach(group => {
-                            const option = document.createElement('option');
-                            option.value = group;
-                            option.textContent = `第${group}组`;
-                            drillSelect.appendChild(option);
-                        });
-                    }
-                }
-            } else if (drillType === '穿层钻孔') {
-                if (region === '12803回风底抽巷') {
-                    if (unit === '一单元') {
-                        if (displayMode === 'single') {
-                            // 单孔显示 - 显示钻孔编号
-                            filteredDrills.forEach(([drillId]) => {
-                                const option = document.createElement('option');
-                                option.value = drillId;
-                                option.textContent = drillId;
-                                drillSelect.appendChild(option);
-                            });
-                        } else if (displayMode === 'unit') {
-                            // 单元显示 - 显示单元名称
-                            const uniqueUnits = new Set();
-                            filteredDrills.forEach(([_, drill]) => {
-                                uniqueUnits.add(drill.unit);
-                            });
-                            
-                            Array.from(uniqueUnits).sort().forEach(unit => {
-                                const option = document.createElement('option');
-                                option.value = unit;
-                                option.textContent = unit;
-                                drillSelect.appendChild(option);
-                            });
-                        } else if (displayMode === 'group') {
-                            // 组数显示 - 显示组数
-                            const uniqueGroups = new Set();
-                            filteredDrills.forEach(([_, drill]) => {
-                                uniqueGroups.add(drill.group);
-                            });
-                            
-                            Array.from(uniqueGroups).sort().forEach(group => {
-                                const option = document.createElement('option');
-                                option.value = group;
-                                option.textContent = `第${group}组`;
-                                drillSelect.appendChild(option);
-                            });
-                        }
-                    }
-                }
+            if (displayMode === 'single') {
+                // 单孔显示模式 - 显示单个钻孔编号
+                filteredDrills.forEach(([drillId]) => {
+                    const option = document.createElement('option');
+                    option.value = drillId;
+                    option.textContent = drillId;
+                    drillSelect.appendChild(option);
+                });
+            } else if (displayMode === 'group') {
+                // 整组显示模式 - 显示组数
+                const uniqueGroups = new Set();
+                filteredDrills.forEach(([_, drill]) => {
+                    uniqueGroups.add(drill.group);
+                });
+                
+                Array.from(uniqueGroups).sort().forEach(group => {
+                    const option = document.createElement('option');
+                    option.value = group;
+                    option.textContent = `第${group}组`;
+                    drillSelect.appendChild(option);
+                });
+            } else if (displayMode === 'unit') {
+                // 单元显示模式 - 显示单元名称
+                const uniqueUnits = new Set();
+                filteredDrills.forEach(([_, drill]) => {
+                    uniqueUnits.add(drill.unit);
+                });
+                
+                Array.from(uniqueUnits).sort().forEach(unit => {
+                    const option = document.createElement('option');
+                    option.value = unit;
+                    option.textContent = unit;
+                    drillSelect.appendChild(option);
+                });
             }
         }
         
@@ -1430,6 +1402,9 @@
             const region = regionSelect.value;
             const unit = unitSelect.value;
             const displayMode = displayModeSelect.value;
+            
+            // 更新显示方式选项
+            updateDisplayModeOptions();
             
             // 更新筛选状态文本
             let status = '';
@@ -1457,7 +1432,7 @@
             const selectedItem = drillSelect.value;
             
             // 如果没有选择任何条件，返回空数组
-            if (!drillType || !region || !unit || !displayMode || !selectedItem) {
+            if (!drillType || !region || !displayMode || !selectedItem) {
                 return [];
             }
             
@@ -1466,7 +1441,6 @@
                     // 基本筛选条件
                     if (drill.drillType !== drillType) return false;
                     if (drill.region !== region) return false;
-                    if (drill.unit !== unit) return false;
                     
                     // 根据显示模式筛选
                     if (displayMode === 'single') {
@@ -1542,7 +1516,10 @@
                 drillTypeSelect.addEventListener('change', updateFilterControls);
                 regionSelect.addEventListener('change', updateFilterControls);
                 unitSelect.addEventListener('change', updateFilterControls);
-                displayModeSelect.addEventListener('change', updateFilterControls);
+                displayModeSelect.addEventListener('change', () => {
+                    updateStatus('更新显示方式...', 'loading');
+                    populateDrillSelect();
+                });
                 drillSelect.addEventListener('change', () => {
                     updateStatus('切换钻孔中...', 'loading');
                     updateChartsAndTable();
