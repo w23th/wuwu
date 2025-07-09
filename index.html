@@ -1061,40 +1061,6 @@
         // CSV文件路径
         const CSV_FILE_PATH = 'data.csv';
         
-        // 模拟数据 - 实际应用中应从data.csv加载
-        const mockData = [
-            {抽采区域: "12802回风巷", 抽采单元: "", 钻孔性质: "高位钻孔", 抽采组数: "A", 钻孔编号: "A-1", 方位: 53, 倾角: 24, 孔深: 35, 检测日期: "2025/06/20", 负压: 5.25, 瓦斯浓度: 83.36, 混合流量: 0.2},
-            {抽采区域: "12802回风巷", 抽采单元: "", 钻孔性质: "高位钻孔", 抽采组数: "A", 钻孔编号: "A-1", 方位: 53, 倾角: 24, 孔深: 35, 检测日期: "2025/06/21", 负压: 5.52, 瓦斯浓度: 76.31, 混合流量: 0.242},
-            {抽采区域: "12802回风巷", 抽采单元: "", 钻孔性质: "高位钻孔", 抽采组数: "A", 钻孔编号: "A-1", 方位: 53, 倾角: 24, 孔深: 35, 检测日期: "2025/06/22", 负压: 5.73, 瓦斯浓度: 72.62, 混合流量: 0.515},
-            {抽采区域: "12802回风巷", 抽采单元: "", 钻孔性质: "高位钻孔", 抽采组数: "A", 钻孔编号: "A-2", 方位: 54, 倾角: 24, 孔深: 35, 检测日期: "2025/06/20", 负压: 5.72, 瓦斯浓度: 74.55, 混合流量: 0.878},
-            {抽采区域: "12802回风巷", 抽采单元: "", 钻孔性质: "高位钻孔", 抽采组数: "A", 钻孔编号: "A-2", 方位: 55, 倾角: 25, 孔深: 36, 检测日期: "2025/06/21", 负压: null, 瓦斯浓度: null, 混合流量: null},
-            {抽采区域: "12802回风巷", 抽采单元: "", 钻孔性质: "高位钻孔", 抽采组数: "A", 钻孔编号: "A-2", 方位: 56, 倾角: 26, 孔深: 37, 检测日期: "2025/06/22", 负压: 5.21, 瓦斯浓度: 74.12, 混合流量: 0.199},
-            {抽采区域: "12802回风巷", 抽采单元: "", 钻孔性质: "高位钻孔", 抽采组数: "B", 钻孔编号: "B-1", 方位: 53, 倾角: 24, 孔深: 35, 检测日期: "2025/06/20", 负压: 5.15, 瓦斯浓度: 85.82, 混合流量: 0.158},
-            {抽采区域: "12802回风巷", 抽采单元: "", 钻孔性质: "高位钻孔", 抽采组数: "B", 钻孔编号: "B-1", 方位: 53, 倾角: 24, 孔深: 35, 检测日期: "2025/06/21", 负压: null, 瓦斯浓度: null, 混合流量: null},
-            {抽采区域: "12802回风巷", 抽采单元: "", 钻孔性质: "高位钻孔", 抽采组数: "B", 钻孔编号: "B-1", 方位: 53, 倾角: 24, 孔深: 35, 检测日期: "2025/06/22", 负压: 5.57, 瓦斯浓度: 68.49, 混合流量: 0.481},
-            {抽采区域: "12802回风巷", 抽采单元: "", 钻孔性质: "高位钻孔", 抽采组数: "B", 钻孔编号: "B-2", 方位: 54, 倾角: 24, 孔深: 35, 检测日期: "2025/06/20", 负压: 5.23, 瓦斯浓度: 90.5, 混合流量: 0.103},
-            {抽采区域: "12802回风巷", 抽采单元: "", 钻孔性质: "高位钻孔", 抽采组数: "B", 钻孔编号: "B-2", 方位: 55, 倾角: 25, 孔深: 36, 检测日期: "2025/06/21", 负压: 5.43, 瓦斯浓度: 75.74, 混合流量: 0.26},
-            {抽采区域: "12802回风巷", 抽采单元: "", 钻孔性质: "高位钻孔", 抽采组数: "B", 钻孔编号: "B-2", 方位: 56, 倾角: 26, 孔深: 37, 检测日期: "2025/06/22", 负压: 5.4, 瓦斯浓度: 86.4, 混合流量: 0.472},
-            {抽采区域: "12802运输巷", 抽采单元: "", 钻孔性质: "高位钻孔", 抽采组数: "A", 钻孔编号: "A-1", 方位: 53, 倾角: 24, 孔深: 35, 检测日期: "2025/06/20", 负压: 5.25, 瓦斯浓度: 83.36, 混合流量: 0.2},
-            {抽采区域: "12802运输巷", 抽采单元: "", 钻孔性质: "高位钻孔", 抽采组数: "A", 钻孔编号: "A-1", 方位: 53, 倾角: 24, 孔深: 35, 检测日期: "2025/06/21", 负压: null, 瓦斯浓度: null, 混合流量: null},
-            {抽采区域: "12802运输巷", 抽采单元: "", 钻孔性质: "高位钻孔", 抽采组数: "A", 钻孔编号: "A-1", 方位: 53, 倾角: 24, 孔深: 35, 检测日期: "2025/06/22", 负压: 5.73, 瓦斯浓度: 72.62, 混合流量: 0.515},
-            {抽采区域: "12802运输巷", 抽采单元: "", 钻孔性质: "高位钻孔", 抽采组数: "A", 钻孔编号: "A-2", 方位: 54, 倾角: 24, 孔深: 35, 检测日期: "2025/06/20", 负压: 5.72, 瓦斯浓度: 74.55, 混合流量: 0.878},
-            {抽采区域: "12802运输巷", 抽采单元: "", 钻孔性质: "高位钻孔", 抽采组数: "A", 钻孔编号: "A-2", 方位: 55, 倾角: 25, 孔深: 36, 检测日期: "2025/06/21", 负压: null, 瓦斯浓度: null, 混合流量: null},
-            {抽采区域: "12802运输巷", 抽采单元: "", 钻孔性质: "高位钻孔", 抽采组数: "A", 钻孔编号: "A-2", 方位: 56, 倾角: 26, 孔深: 37, 检测日期: "2025/06/22", 负压: 5.21, 瓦斯浓度: 74.12, 混合流量: 0.199},
-            {抽采区域: "12802运输巷", 抽采单元: "", 钻孔性质: "高位钻孔", 抽采组数: "B", 钻孔编号: "B-1", 方位: 53, 倾角: 24, 孔深: 35, 检测日期: "2025/06/20", 负压: 5.15, 瓦斯浓度: 85.82, 混合流量: 0.158},
-            {抽采区域: "12802运输巷", 抽采单元: "", 钻孔性质: "高位钻孔", 抽采组数: "B", 钻孔编号: "B-1", 方位: 53, 倾角: 24, 孔深: 35, 检测日期: "2025/06/21", 负压: 5.57, 瓦斯浓度: 64.96, 混合流量: 0.526},
-            {抽采区域: "12802运输巷", 抽采单元: "", 钻孔性质: "高位钻孔", 抽采组数: "B", 钻孔编号: "B-1", 方位: 53, 倾角: 24, 孔深: 35, 检测日期: "2025/06/22", 负压: 5.57, 瓦斯浓度: 68.49, 混合流量: 0.481},
-            {抽采区域: "12802运输巷", 抽采单元: "", 钻孔性质: "高位钻孔", 抽采组数: "B", 钻孔编号: "B-2", 方位: 54, 倾角: 24, 孔深: 35, 检测日期: "2025/06/20", 负压: 5.23, 瓦斯浓度: 90.5, 混合流量: 0.103},
-            {抽采区域: "12802运输巷", 抽采单元: "", 钻孔性质: "高位钻孔", 抽采组数: "B", 钻孔编号: "B-2", 方位: 55, 倾角: 25, 孔深: 36, 检测日期: "2025/06/21", 负压: 5.43, 瓦斯浓度: 75.74, 混合流量: 0.26},
-            {抽采区域: "12802运输巷", 抽采单元: "", 钻孔性质: "高位钻孔", 抽采组数: "B", 钻孔编号: "B-2", 方位: 56, 倾角: 26, 孔深: 37, 检测日期: "2025/06/22", 负压: 5.4, 瓦斯浓度: 86.4, 混合流量: 0.472},
-            {抽采区域: "12803回风巷", 抽采单元: "一单元", 钻孔性质: "穿层钻孔", 抽采组数: "8", 钻孔编号: "8-1", 方位: 325, 倾角: 17, 孔深: 25, 检测日期: "2025/06/20", 负压: 17.59, 瓦斯浓度: 52.16, 混合流量: 0.265},
-            {抽采区域: "12803回风巷", 抽采单元: "一单元", 钻孔性质: "穿层钻孔", 抽采组数: "8", 钻孔编号: "8-1", 方位: 325, 倾角: 17, 孔深: 25, 检测日期: "2025/06/21", 负压: null, 瓦斯浓度: null, 混合流量: null},
-            {抽采区域: "12803回风巷", 抽采单元: "一单元", 钻孔性质: "穿层钻孔", 抽采组数: "8", 钻孔编号: "8-1", 方位: 325, 倾角: 17, 孔深: 25, 检测日期: "2025/06/22", 负压: 19.59, 瓦斯浓度: 54.16, 混合流量: 2.265},
-            {抽采区域: "12803回风巷", 抽采单元: "一单元", 钻孔性质: "穿层钻孔", 抽采组数: "8", 钻孔编号: "8-2", 方位: 325, 倾角: 18, 孔深: 30, 检测日期: "2025/06/20", 负压: 17.59, 瓦斯浓度: 52.16, 混合流量: 0.265},
-            {抽采区域: "12803回风巷", 抽采单元: "一单元", 钻孔性质: "穿层钻孔", 抽采组数: "8", 钻孔编号: "8-2", 方位: 325, 倾角: 18, 孔深: 30, 检测日期: "2025/06/21", 负压: 18.59, 瓦斯浓度: 53.16, 混合流量: 1.265},
-            {抽采区域: "12803回风巷", 抽采单元: "一单元", 钻孔性质: "穿层钻孔", 抽采组数: "8", 钻孔编号: "8-2", 方位: 325, 倾角: 18, 孔深: 30, 检测日期: "2025/06/22", 负压: 19.59, 瓦斯浓度: 54.16, 混合流量: 2.265}
-        ];
-        
         // 获取今天的日期（YYYY-MM-DD格式）
         function getTodayDate() {
             const today = new Date();
@@ -1122,7 +1088,45 @@
         
         // 解析CSV数据
         function parseCSV(csvText) {
-            return mockData; // 实际应用中应解析CSV文本
+            const lines = csvText.split('\n').filter(line => line.trim() !== '');
+            const headers = lines[0].split(',').map(header => header.trim());
+            
+            const data = [];
+            for (let i = 1; i < lines.length; i++) {
+                const values = lines[i].split(',');
+                const entry = {};
+                
+                for (let j = 0; j < headers.length; j++) {
+                    let value = values[j] ? values[j].trim() : '';
+                    
+                    // 转换数值类型
+                    if (['负压', '瓦斯浓度', '混合流量', '方位', '倾角', '孔深'].includes(headers[j])) {
+                        value = value === '' ? null : parseFloat(value);
+                    }
+                    
+                    // 标准化日期格式
+                    if (headers[j] === '检测日期' && value) {
+                        const dateParts = value.split('/');
+                        if (dateParts.length === 3) {
+                            const year = dateParts[0];
+                            const month = dateParts[1].padStart(2, '0');
+                            const day = dateParts[2].padStart(2, '0');
+                            value = `${year}-${month}-${day}`;
+                        }
+                    }
+                    
+                    entry[headers[j]] = value;
+                }
+                
+                // 添加抽采组数默认值
+                if (!entry['抽采组数'] || entry['抽采组数'] === '') {
+                    entry['抽采组数'] = 'N/A';
+                }
+                
+                data.push(entry);
+            }
+            
+            return data;
         }
         
         // 将CSV数据转换为按钻孔编号分组的数据结构
@@ -1130,7 +1134,7 @@
             const groupedData = {};
             
             // 找到最新数据日期
-            const dates = csvData.map(item => item['检测日期']);
+            const dates = csvData.map(item => item['检测日期']).filter(d => d);
             latestDataDate = dates.length > 0 ? dates.reduce((a, b) => a > b ? a : b) : getTodayDate();
             
             // 按钻孔编号分组
@@ -1157,17 +1161,31 @@
                 }
                 
                 // 添加数据点
-                groupedData[drillId].dates.push(item['检测日期']);
-                groupedData[drillId].pressure.push(item['负压']);
-                groupedData[drillId].concentration.push(item['瓦斯浓度']);
-                groupedData[drillId].flow.push(item['混合流量']);
-                
-                // 设置初始值（第一次检测）
-                if (!groupedData[drillId].initialDate || item['检测日期'] < groupedData[drillId].initialDate) {
-                    groupedData[drillId].initialDate = item['检测日期'];
-                    groupedData[drillId].initialConcentration = item['瓦斯浓度'];
-                    groupedData[drillId].initialPressure = item['负压'];
+                if (item['检测日期']) {
+                    groupedData[drillId].dates.push(item['检测日期']);
+                    groupedData[drillId].pressure.push(item['负压']);
+                    groupedData[drillId].concentration.push(item['瓦斯浓度']);
+                    groupedData[drillId].flow.push(item['混合流量']);
+                    
+                    // 设置初始值（第一次检测）
+                    if (!groupedData[drillId].initialDate || item['检测日期'] < groupedData[drillId].initialDate) {
+                        groupedData[drillId].initialDate = item['检测日期'];
+                        groupedData[drillId].initialConcentration = item['瓦斯浓度'];
+                        groupedData[drillId].initialPressure = item['负压'];
+                    }
                 }
+            });
+            
+            // 按日期排序每个钻孔的数据
+            Object.keys(groupedData).forEach(drillId => {
+                const drill = groupedData[drillId];
+                const dateIndices = drill.dates.map((date, index) => ({ date, index }));
+                dateIndices.sort((a, b) => a.date.localeCompare(b.date));
+                
+                drill.dates = dateIndices.map(di => di.date);
+                drill.pressure = dateIndices.map(di => drill.pressure[di.index]);
+                drill.concentration = dateIndices.map(di => drill.concentration[di.index]);
+                drill.flow = dateIndices.map(di => drill.flow[di.index]);
             });
             
             return groupedData;
@@ -1199,7 +1217,7 @@
                     if (drill['抽采区域'] === currentArea && 
                         drill['钻孔性质'] === currentDrillType &&
                         (currentDrillType === '高位钻孔' || drill['抽采单元'] === currentUnit) &&
-                        drill['抽采组数']) {
+                        drill['抽采组数'] && drill['抽采组数'] !== 'N/A') {
                         groups.add(drill['抽采组数']);
                     }
                 }
@@ -1270,7 +1288,10 @@
             
             try {
                 // 加载CSV文件
-                const csvText = ''; // 实际应用中应加载CSV文件
+                const response = await fetch(CSV_FILE_PATH);
+                if (!response.ok) throw new Error(`网络响应错误: ${response.status}`);
+                
+                const csvText = await response.text();
                 const csvData = parseCSV(csvText);
                 allDrillData = groupDataByDrill(csvData);
                 
@@ -1335,7 +1356,7 @@
                 updateDrillSelect();
                 
                 // 设置默认日期范围
-                startDateInput.value = '2025-06-01';
+                startDateInput.value = '2025-05-01';
                 endDateInput.value = getTodayDate();
                 
                 // 更新加载进度
@@ -1414,22 +1435,18 @@
         function filterDataByDateRange(dates, data, startDate, endDate) {
             const filteredDates = [];
             const filteredData = [];
-            const isDashed = [];
             
             for (let i = 0; i < dates.length; i++) {
                 const dateStr = dates[i];
                 if (dateStr >= startDate && dateStr <= endDate) {
                     filteredDates.push(dateStr);
                     filteredData.push(data[i]);
-                    // 标记数据是否为空（用于虚线）
-                    isDashed.push(data[i] === null);
                 }
             }
             
             return { 
                 dates: filteredDates, 
-                data: filteredData,
-                isDashed: isDashed
+                data: filteredData
             };
         }
         
@@ -1443,7 +1460,7 @@
                 const lastIndex = drill.dates.length - 1;
                 
                 // 检查最后一个数据点是否是今天的
-                if (drill.dates[lastIndex] === today && drill.concentration[lastIndex] > 30) {
+                if (lastIndex >= 0 && drill.dates[lastIndex] === today && drill.concentration[lastIndex] > 30) {
                     highConcentrationDrills.push({
                         drillId,
                         concentration: drill.concentration[lastIndex],
@@ -1787,7 +1804,7 @@
                 });
                 
                 // 按日期排序
-                allData.sort((a, b) => new Date(a.date) - new Date(b.date));
+                allData.sort((a, b) => a.date.localeCompare(b.date));
                 
                 // 填充表格
                 allData.forEach(item => {
