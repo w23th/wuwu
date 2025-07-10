@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>营脚煤矿钻孔数据分析系统1111</title>
+    <title>营脚煤矿钻孔数据分析系统22222</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.1.0/dist/chartjs-plugin-annotation.min.js"></script>
@@ -1141,7 +1141,7 @@
             return data;
         }
         
-        // 将CSV数据转换为按钻孔编号分组的数据结构
+        // 将CSV数据转换为按钻孔分组的数据结构
         function groupDataByDrill(csvData) {
             const groupedData = {};
             
@@ -1149,16 +1149,19 @@
             const dates = csvData.map(item => item['检测日期']).filter(d => d);
             latestDataDate = dates.length > 0 ? dates.reduce((a, b) => a > b ? a : b) : getTodayDate();
             
-            // 按钻孔编号分组
+            // 按钻孔唯一标识分组
             csvData.forEach(item => {
-                const drillId = item['钻孔编号'];
+                // 创建唯一键：区域 + 单元/组数 + 钻孔编号
+                const unitGroupKey = item['抽采单元'] || item['抽采组数'] || '';
+                const drillKey = `${item['抽采区域']}|${unitGroupKey}|${item['钻孔编号']}`;
                 
-                if (!groupedData[drillId]) {
-                    groupedData[drillId] = {
+                if (!groupedData[drillKey]) {
+                    groupedData[drillKey] = {
                         '抽采区域': item['抽采区域'],
-                        '抽采单元': item['抽采单元'],
+                        '抽采单元': item['抽采单元'] || '',
                         '钻孔性质': item['钻孔性质'],
-                        '抽采组数': item['抽采组数'],
+                        '抽采组数': item['抽采组数'] || '',
+                        '钻孔编号': item['钻孔编号'],
                         '方位': item['方位'],
                         '倾角': item['倾角'],
                         '孔深': item['孔深'],
@@ -1174,23 +1177,23 @@
                 
                 // 添加数据点
                 if (item['检测日期']) {
-                    groupedData[drillId].dates.push(item['检测日期']);
-                    groupedData[drillId].pressure.push(item['负压']);
-                    groupedData[drillId].concentration.push(item['瓦斯浓度']);
-                    groupedData[drillId].flow.push(item['混合流量']);
+                    groupedData[drillKey].dates.push(item['检测日期']);
+                    groupedData[drillKey].pressure.push(item['负压']);
+                    groupedData[drillKey].concentration.push(item['瓦斯浓度']);
+                    groupedData[drillKey].flow.push(item['混合流量']);
                     
                     // 设置初始值（第一次检测）
-                    if (!groupedData[drillId].initialDate || item['检测日期'] < groupedData[drillId].initialDate) {
-                        groupedData[drillId].initialDate = item['检测日期'];
-                        groupedData[drillId].initialConcentration = item['瓦斯浓度'];
-                        groupedData[drillId].initialPressure = item['负压'];
+                    if (!groupedData[drillKey].initialDate || item['检测日期'] < groupedData[drillKey].initialDate) {
+                        groupedData[drillKey].initialDate = item['检测日期'];
+                        groupedData[drillKey].initialConcentration = item['瓦斯浓度'];
+                        groupedData[drillKey].initialPressure = item['负压'];
                     }
                 }
             });
             
             // 按日期排序每个钻孔的数据
-            Object.keys(groupedData).forEach(drillId => {
-                const drill = groupedData[drillId];
+            Object.keys(groupedData).forEach(drillKey => {
+                const drill = groupedData[drillKey];
                 const dateIndices = drill.dates.map((date, index) => ({ date, index }));
                 dateIndices.sort((a, b) => a.date.localeCompare(b.date));
                 
@@ -1211,21 +1214,24 @@
             let options = [];
             
             if (displayMode === 'single') {
-                // 单孔显示：列出符合条件的钻孔编号
-                for (const drillId in allDrillData) {
-                    const drill = allDrillData[drillId];
+                // 单孔显示：列出符合条件的钻孔
+                for (const drillKey in allDrillData) {
+                    const drill = allDrillData[drillKey];
                     if (drill['抽采区域'] === currentArea && 
                         drill['钻孔性质'] === currentDrillType &&
                         (currentDrillType === '高位钻孔' || drill['抽采单元'] === currentUnit)) {
-                        options.push(drillId);
+                        options.push({
+                            value: drillKey,
+                            text: drill['钻孔编号']
+                        });
                     }
                 }
-                options.sort();
+                options.sort((a, b) => a.text.localeCompare(b.text));
             } else {
                 // 组数显示：列出符合条件的抽采组数
                 const groups = new Set();
-                for (const drillId in allDrillData) {
-                    const drill = allDrillData[drillId];
+                for (const drillKey in allDrillData) {
+                    const drill = allDrillData[drillKey];
                     if (drill['抽采区域'] === currentArea && 
                         drill['钻孔性质'] === currentDrillType &&
                         (currentDrillType === '高位钻孔' || drill['抽采单元'] === currentUnit) &&
@@ -1233,21 +1239,24 @@
                         groups.add(drill['抽采组数']);
                     }
                 }
-                options = Array.from(groups).sort();
+                options = Array.from(groups).sort().map(group => ({
+                    value: group,
+                    text: group
+                }));
             }
             
             // 填充下拉框
             options.forEach(option => {
                 const optElement = document.createElement('option');
-                optElement.value = option;
-                optElement.textContent = option;
+                optElement.value = option.value;
+                optElement.textContent = option.text;
                 select.appendChild(optElement);
             });
             
             // 默认选择第一个
             if (options.length > 0) {
-                select.value = options[0];
-                currentSelection = options[0];
+                select.value = options[0].value;
+                currentSelection = options[0].value;
             } else {
                 select.value = '';
                 currentSelection = '';
@@ -1430,8 +1439,8 @@
                 }
             } else {
                 // 组数显示：获取该组所有钻孔的数据
-                for (const drillId in allDrillData) {
-                    const drill = allDrillData[drillId];
+                for (const drillKey in allDrillData) {
+                    const drill = allDrillData[drillKey];
                     if (drill['抽采组数'] === currentSelection && 
                         drill['抽采区域'] === currentArea && 
                         drill['钻孔性质'] === currentDrillType) {
@@ -1467,20 +1476,20 @@
             const highConcentrationDrills = [];
             const today = latestDataDate || getTodayDate();
             
-            for (const drillId in allDrillData) {
-                const drill = allDrillData[drillId];
+            for (const drillKey in allDrillData) {
+                const drill = allDrillData[drillKey];
                 const lastIndex = drill.dates.length - 1;
                 
                 // 检查最后一个数据点是否是今天的
                 if (lastIndex >= 0 && drill.dates[lastIndex] === today && drill.concentration[lastIndex] > 30) {
                     highConcentrationDrills.push({
-                        drillId,
+                        drillId: drill['钻孔编号'],
                         concentration: drill.concentration[lastIndex],
                         date: drill.dates[lastIndex],
                         status: drill.concentration[lastIndex] > 85 ? '严重超标' : 
                                drill.concentration[lastIndex] > 60 ? '超标' : '较高',
                         area: drill['抽采区域'],
-                        unit: drill['抽采单元'] || 'N/A'
+                        unit: drill['抽采单元'] || drill['抽采组数'] || 'N/A'
                     });
                 }
             }
@@ -1686,7 +1695,11 @@
             
             // 更新所有钻孔编号显示
             document.querySelectorAll('.drill-id').forEach(el => {
-                el.textContent = displayMode === 'single' ? currentSelection : currentSelection + '组';
+                if (displayMode === 'single' && dataToDisplay.length > 0) {
+                    el.textContent = dataToDisplay[0]['钻孔编号'];
+                } else if (displayMode === 'group') {
+                    el.textContent = currentSelection;
+                }
             });
             
             // 使用setTimeout允许UI更新
@@ -1790,10 +1803,10 @@
                         if (date >= startDate && date <= endDate) {
                             allData.push({
                                 date,
-                                drillId: drill.钻孔编号,
-                                azimuth: drill.方位,
-                                dip: drill.倾角,
-                                depth: drill.孔深,
+                                drillId: drill['钻孔编号'],
+                                azimuth: drill['方位'],
+                                dip: drill['倾角'],
+                                depth: drill['孔深'],
                                 initialDate: drill.initialDate,
                                 initialConcentration: drill.initialConcentration,
                                 initialPressure: drill.initialPressure,
@@ -2011,7 +2024,7 @@
                     ...createSegmentedDataset(
                         pressureData.data, 
                         colors[index % colors.length], 
-                        `${drill.钻孔编号} 负压`
+                        `${drill['钻孔编号']} 负压`
                     )
                 );
                 
@@ -2019,7 +2032,7 @@
                     ...createSegmentedDataset(
                         concentrationData.data, 
                         colors[index % colors.length], 
-                        `${drill.钻孔编号} 浓度`
+                        `${drill['钻孔编号']} 浓度`
                     )
                 );
                 
@@ -2027,7 +2040,7 @@
                     ...createSegmentedDataset(
                         flowData.data, 
                         colors[index % colors.length], 
-                        `${drill.钻孔编号} 流量`
+                        `${drill['钻孔编号']} 流量`
                     )
                 );
             });
