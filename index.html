@@ -3,11 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>营脚煤矿钻孔数据分析系统22222</title>
+    <title>营脚煤矿钻孔数据分析系统</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.1.0/dist/chartjs-plugin-annotation.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <style>
         * {
             margin: 0;
@@ -151,10 +150,12 @@
             display: flex;
             gap: 10px;
             align-items: center;
+            flex-wrap: wrap;
         }
         
         .date-range input {
             min-width: 140px;
+            flex: 1;
         }
         
         .btn-apply, .btn-upload {
@@ -1234,7 +1235,6 @@
                     const drill = allDrillData[drillKey];
                     if (drill['抽采区域'] === currentArea && 
                         drill['钻孔性质'] === currentDrillType &&
-                        (currentDrillType === '高位钻孔' || drill['抽采单元'] === currentUnit) &&
                         drill['抽采组数'] && drill['抽采组数'] !== 'N/A') {
                         groups.add(drill['抽采组数']);
                     }
@@ -1275,13 +1275,12 @@
                     <option value="高位钻孔">高位钻孔</option>
                     <option value="顺层钻孔">顺层钻孔</option>
                 `;
-                unitGroup.classList.remove('disabled-control');
             }
         }
         
         // 根据钻孔类型更新单元控件状态
         function updateUnitControl() {
-            if (currentDrillType === '高位钻孔') {
+            if (currentDrillType === '高位钻孔' || currentDrillType === '穿层钻孔') {
                 unitGroup.classList.add('disabled-control');
             } else {
                 unitGroup.classList.remove('disabled-control');
@@ -1734,7 +1733,7 @@
         
         // 更新指标卡
         function updateMetrics(dataToDisplay) {
-            if (dataToDisplay.length === 0) {
+            if (dataToDisplay.length === 0 || displayMode === 'group') {
                 avgPressureElement.textContent = '无数据';
                 avgConcentrationElement.textContent = '无数据';
                 avgFlowElement.textContent = '无数据';
@@ -1899,7 +1898,7 @@
             highConcentrationTableBody.appendChild(fragment);
         }
         
-        // 更新图表
+        // 更新图表 - 支持虚线连接缺失数据点
         function updateCharts(dataToDisplay, startDate, endDate) {
             const ctx1 = document.getElementById('pressure-chart').getContext('2d');
             const ctx2 = document.getElementById('concentration-chart').getContext('2d');
@@ -1964,11 +1963,14 @@
                         label: label
                     };
                     
-                    let previousValue = null;
+                    let lastNonNullIndex = -1;
                     
-                    data.forEach((value, i) => {
+                    // 处理数据点，创建分段数据集
+                    for (let i = 0; i < data.length; i++) {
+                        const value = data[i];
+                        
                         if (value === null) {
-                            // 当遇到空值时，保存当前线段（如果有数据）
+                            // 如果当前值为空，结束当前线段（如果有数据）
                             if (currentSegment.data.length > 0) {
                                 segments.push(currentSegment);
                                 currentSegment = {
@@ -1983,13 +1985,25 @@
                                     label: '缺失数据'
                                 };
                             }
+                            
+                            // 如果前一个非空值存在，添加到虚线线段
+                            if (lastNonNullIndex >= 0) {
+                                currentSegment.data.push({
+                                    x: pressureData.dates[lastNonNullIndex],
+                                    y: data[lastNonNullIndex]
+                                });
+                            }
                         } else {
-                            // 如果之前是空值，保存虚线线段
-                            if (currentSegment.borderDash) {
-                                if (previousValue !== null) {
-                                    // 添加插值点
-                                    currentSegment.data.push({x: pressureData.dates[i-1], y: previousValue});
-                                }
+                            // 当前值非空
+                            lastNonNullIndex = i;
+                            
+                            // 如果当前是虚线线段，且已有数据点，结束当前虚线线段
+                            if (currentSegment.borderDash && currentSegment.data.length > 0) {
+                                // 添加当前点作为虚线终点
+                                currentSegment.data.push({
+                                    x: pressureData.dates[i],
+                                    y: value
+                                });
                                 segments.push(currentSegment);
                                 currentSegment = {
                                     data: [],
@@ -2005,11 +2019,13 @@
                                 };
                             }
                             
-                            // 添加当前点
-                            currentSegment.data.push({x: pressureData.dates[i], y: value});
-                            previousValue = value;
+                            // 添加当前点到当前线段
+                            currentSegment.data.push({
+                                x: pressureData.dates[i],
+                                y: value
+                            });
                         }
-                    });
+                    }
                     
                     // 添加最后一个线段
                     if (currentSegment.data.length > 0) {
