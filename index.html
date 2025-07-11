@@ -1940,8 +1940,18 @@
             const flowDatasets = [];
             
             const colors = ['#e74c3c', '#3498db', '#2ecc71', '#f1c40f', '#9b59b6', '#1abc9c'];
+            const drillIds = new Set(); // 用于跟踪已添加的钻孔ID
             
             dataToDisplay.forEach((drill, index) => {
+                // 检查是否已添加此钻孔的标识
+                const drillId = drill['钻孔编号'];
+                if (drillIds.has(drillId)) {
+                    // 如果已经添加过此钻孔，则不添加标签
+                    drillIds.add(drillId);
+                    return;
+                }
+                drillIds.add(drillId);
+                
                 // 过滤数据
                 const pressureData = filterDataByDateRange(
                     drill.dates, 
