@@ -556,6 +556,44 @@
             100% { opacity: 0.5; }
         }
         
+        .system-loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(12, 28, 41, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            gap: 20px;
+        }
+        
+        .system-loading h2 {
+            color: #a0d2ff;
+            font-size: 1.6rem;
+            text-align: center;
+            padding: 0 15px;
+        }
+        
+        .system-loading .progress-bar {
+            width: 250px;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 15px;
+        }
+        
+        .system-loading .progress {
+            height: 100%;
+            background: linear-gradient(90deg, #3498db, #2ecc71);
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+        
         .range-info {
             display: flex;
             justify-content: space-between;
@@ -711,10 +749,19 @@
     </style>
 </head>
 <body>
+    <!-- 系统加载状态 -->
+    <div class="system-loading" id="system-loading">
+        <div class="loading-spinner"></div>
+        <h2>营脚煤矿数据分析系统初始化中...</h2>
+        <div class="progress-bar">
+            <div class="progress" id="loading-progress"></div>
+        </div>
+    </div>
+    
     <!-- 系统状态指示器 -->
     <div class="system-status-indicator" id="status-indicator">
         <div class="status-indicator" id="status-indicator-icon"></div>
-        <span id="status-text">系统加载中...</span>
+        <span id="status-text">系统就绪</span>
     </div>
     
     <div class="container">
@@ -724,11 +771,11 @@
             <div class="system-status">
                 <div class="status-item">
                     <i class="fas fa-database"></i>
-                    <span>数据更新: <span id="last-update">-</span></span>
+                    <span>数据更新: <span id="last-update">2025-06-27</span></span>
                 </div>
                 <div class="status-item">
                     <i class="fas fa-exclamation-triangle"></i>
-                    <span>浓度超30%钻孔: <span id="exceed-count">0</span></span>
+                    <span>浓度超30%钻孔: <span id="exceed-count">5</span></span>
                 </div>
             </div>
         </div>
@@ -777,7 +824,7 @@
                 <div class="control-group">
                     <label for="drill-select"><i class="fas fa-drafting-compass"></i> 选择孔号/组</label>
                     <select id="drill-select">
-                        <option value="">请先选择区域和类型</option>
+                        <!-- 动态填充 -->
                     </select>
                 </div>
                 
@@ -800,34 +847,34 @@
             <div class="summary">
                 <div class="metric-box">
                     <div class="metric-label"><i class="fas fa-tachometer-alt"></i> 平均负压</div>
-                    <div class="metric-value" id="avg-pressure">-</div>
+                    <div class="metric-value" id="avg-pressure">5.32 KPa</div>
                 </div>
                 <div class="metric-box">
                     <div class="metric-label"><i class="fas fa-wind"></i> 平均瓦斯浓度</div>
-                    <div class="metric-value" id="avg-concentration">-</div>
+                    <div class="metric-value" id="avg-concentration">42.5%</div>
                 </div>
                 <div class="metric-box">
                     <div class="metric-label"><i class="fas fa-fan"></i> 平均混合流量</div>
-                    <div class="metric-value" id="avg-flow">-</div>
+                    <div class="metric-value" id="avg-flow">0.218 m³/min</div>
                 </div>
                 <div class="metric-box">
                     <div class="metric-label"><i class="fas fa-hourglass-start"></i> 始抽浓度</div>
-                    <div class="metric-value" id="initial-concentration">-</div>
+                    <div class="metric-value" id="initial-concentration">90.5%</div>
                 </div>
                 <div class="metric-box">
                     <div class="metric-label"><i class="fas fa-arrow-up"></i> 历史最高浓度</div>
-                    <div class="metric-value" id="max-concentration">-</div>
+                    <div class="metric-value" id="max-concentration">92.9%</div>
                 </div>
                 <div class="metric-box">
                     <div class="metric-label"><i class="fas fa-arrow-down"></i> 历史最低浓度</div>
-                    <div class="metric-value" id="min-concentration">-</div>
+                    <div class="metric-value" id="min-concentration">6.6%</div>
                 </div>
             </div>
         </div>
         
         <div class="charts-grid">
             <div class="card">
-                <div class="chart-title"><span class="drill-id">-</span> <i class="fas fa-tachometer-alt"></i> 负压变化曲线 (KPa)</div>
+                <div class="chart-title"><span class="drill-id">A-1</span> <i class="fas fa-tachometer-alt"></i> 负压变化曲线 (KPa)</div>
                 <div class="chart-container">
                     <canvas id="pressure-chart"></canvas>
                 </div>
@@ -840,7 +887,7 @@
                 <div class="chart-note">注：虚线表示数据缺失</div>
             </div>
             <div class="card">
-                <div class="chart-title"><span class="drill-id">-</span> <i class="fas fa-wind"></i> 瓦斯浓度变化曲线 (%)</div>
+                <div class="chart-title"><span class="drill-id">A-1</span> <i class="fas fa-wind"></i> 瓦斯浓度变化曲线 (%)</div>
                 <div class="chart-container">
                     <canvas id="concentration-chart"></canvas>
                 </div>
@@ -862,7 +909,7 @@
                 <div class="chart-note">注：虚线表示数据缺失</div>
             </div>
             <div class="card">
-                <div class="chart-title"><span class="drill-id">-</span> <i class="fas fa-fan"></i> 混合流量变化曲线 (m³/min)</div>
+                <div class="chart-title"><span class="drill-id">A-1</span> <i class="fas fa-fan"></i> 混合流量变化曲线 (m³/min)</div>
                 <div class="chart-container">
                     <canvas id="flow-chart"></canvas>
                 </div>
@@ -909,7 +956,7 @@
                 <div class="loading-spinner"></div>
                 <div class="loading-text">正在加载钻孔数据...</div>
             </div>
-            <h3><i class="fas fa-table"></i> 钻孔详细数据 - <span class="drill-id">-</span></h3>
+            <h3><i class="fas fa-table"></i> 钻孔详细数据 - <span class="drill-id">A-1</span></h3>
             <div class="data-table-container">
                 <table class="data-table">
                     <thead>
@@ -928,7 +975,7 @@
                         </tr>
                     </thead>
                     <tbody id="data-table-body">
-                        <tr><td colspan="11" style="text-align: center; padding: 30px;">等待加载数据...</td></tr>
+                        <!-- 动态填充 -->
                     </tbody>
                 </table>
             </div>
@@ -953,7 +1000,7 @@
                         </tr>
                     </thead>
                     <tbody id="high-concentration-table-body">
-                        <tr><td colspan="6" style="text-align: center; padding: 30px;">等待加载数据...</td></tr>
+                        <!-- 动态填充 -->
                     </tbody>
                 </table>
             </div>
@@ -972,7 +1019,7 @@
         </div>
         
         <div class="footer">
-            <p><i class="fas fa-copyright"></i> 营脚煤矿通防科 | 数据更新: <span id="last-update-footer">-</span></p>
+            <p><i class="fas fa-copyright"></i> 营脚煤矿通防科 | 数据更新: <span id="last-update-footer">2025-06-27</span></p>
         </div>
     </div>
 
@@ -997,6 +1044,8 @@
         const statusIndicator = document.getElementById('status-indicator');
         const statusText = document.getElementById('status-text');
         const statusIcon = document.getElementById('status-indicator-icon');
+        const systemLoading = document.getElementById('system-loading');
+        const loadingProgress = document.getElementById('loading-progress');
         const singleDisplayBtn = document.getElementById('single-display');
         const groupDisplayBtn = document.getElementById('group-display');
         
@@ -1013,6 +1062,7 @@
         
         // 存储所有钻孔数据
         let allDrillData = [];
+        let filteredDrillData = [];
         let latestDataDate = '';
         let displayMode = 'single'; // 'single' 或 'group'
         let currentArea = '12802回风巷';
@@ -1262,7 +1312,9 @@
         
         // 初始化页面
         async function initializePage() {
-            updateStatus('正在加载数据...', 'loading');
+            // 更新加载进度
+            loadingProgress.style.width = '20%';
+            updateStatus('正在加载数据文件...', 'loading');
             
             try {
                 // 加载CSV文件
@@ -1272,6 +1324,10 @@
                 const csvText = await response.text();
                 const csvData = parseCSV(csvText);
                 allDrillData = groupDataByDrill(csvData);
+                
+                // 更新加载进度
+                loadingProgress.style.width = '40%';
+                updateStatus('正在解析数据...', 'loading');
                 
                 // 设置最后更新日期
                 lastUpdateElement.textContent = latestDataDate;
@@ -1348,8 +1404,22 @@
                     endDateInput.value = getTodayDate();
                 }
                 
+                // 更新加载进度
+                loadingProgress.style.width = '80%';
+                
                 // 初始化图表
                 updateChartsAndTable();
+                
+                // 更新加载进度
+                setTimeout(() => {
+                    loadingProgress.style.width = '100%';
+                    
+                    // 隐藏加载界面
+                    setTimeout(() => {
+                        systemLoading.style.display = 'none';
+                        updateStatus('系统就绪');
+                    }, 500);
+                }, 300);
                 
                 // 应用按钮事件监听
                 applyBtn.addEventListener('click', () => {
@@ -1357,28 +1427,28 @@
                     updateChartsAndTable();
                 });
                 
-                updateStatus('系统就绪');
-                
             } catch (error) {
                 console.error('数据加载失败:', error);
                 updateStatus('数据加载失败', 'error');
                 
+                // 更新加载进度
+                loadingProgress.style.width = '100%';
+                
                 // 显示错误信息
-                const errorMsg = document.createElement('div');
-                errorMsg.className = 'card';
-                errorMsg.style.background = 'rgba(231, 76, 60, 0.2)';
-                errorMsg.innerHTML = `
-                    <h3 style="color:#e74c3c;"><i class="fas fa-exclamation-circle"></i> 数据加载失败</h3>
-                    <p>无法加载数据文件: ${error.message}</p>
-                    <p>请确保data.csv文件存在且格式正确</p>
-                    <button id="retry-btn" class="btn-apply" style="margin-top:15px;">
-                        <i class="fas fa-redo"></i> 重新加载
-                    </button>
-                `;
-                
-                document.querySelector('.container').insertBefore(errorMsg, document.querySelector('.card'));
-                
-                document.getElementById('retry-btn').addEventListener('click', initializePage);
+                setTimeout(() => {
+                    systemLoading.innerHTML = `
+                        <h2 style="color:#e74c3c;">数据加载失败</h2>
+                        <p style="color:#f0f0f0; max-width:500px; text-align:center;">
+                            无法加载数据文件: ${error.message}<br>
+                            请确保data.csv文件存在且格式正确
+                        </p>
+                        <button id="retry-btn" class="btn-apply" style="margin-top:20px;">
+                            <i class="fas fa-redo"></i> 重新加载
+                        </button>
+                    `;
+                    
+                    document.getElementById('retry-btn').addEventListener('click', initializePage);
+                }, 500);
             }
         }
         
@@ -1596,8 +1666,8 @@
                         }]
                     },
                     options: {
-                        responsive: true;
-                        maintainAspectRatio: false;
+                        responsive: true,
+                        maintainAspectRatio: false,
                         plugins: {
                             legend: {
                                 position: 'right',
@@ -1653,8 +1723,6 @@
                     el.textContent = dataToDisplay[0]['钻孔编号'];
                 } else if (displayMode === 'group') {
                     el.textContent = currentSelection;
-                } else {
-                    el.textContent = '-';
                 }
             });
             
@@ -1690,7 +1758,7 @@
         
         // 更新指标卡
         function updateMetrics(dataToDisplay) {
-            if (dataToDisplay.length === 0) {
+            if (dataToDisplay.length === 0 || displayMode === 'group') {
                 avgPressureElement.textContent = '无数据';
                 avgConcentrationElement.textContent = '无数据';
                 avgFlowElement.textContent = '无数据';
@@ -1700,17 +1768,16 @@
                 return;
             }
             
-            if (displayMode === 'single') {
-                // 单孔显示模式
-                const drill = dataToDisplay[0];
-                
-                // 计算平均值
-                let totalPressure = 0;
-                let totalConcentration = 0;
-                let totalFlow = 0;
-                let count = 0;
-                
-                drill.pressure.forEach(val => {
+            // 计算平均值
+            let totalPressure = 0;
+            let totalConcentration = 0;
+            let totalFlow = 0;
+            let count = 0;
+            let maxConcentration = 0;
+            let minConcentration = 100;
+            
+            dataToDisplay.forEach(drill => {
+                drill.pressure.forEach((val, index) => {
                     if (val !== null) {
                         totalPressure += val;
                         count++;
@@ -1718,72 +1785,30 @@
                 });
                 
                 drill.concentration.forEach(val => {
-                    if (val !== null) totalConcentration += val;
+                    if (val !== null) {
+                        totalConcentration += val;
+                        if (val > maxConcentration) maxConcentration = val;
+                        if (val < minConcentration) minConcentration = val;
+                    }
                 });
                 
                 drill.flow.forEach(val => {
                     if (val !== null) totalFlow += val;
                 });
-                
-                const avgPressure = count > 0 ? (totalPressure / count).toFixed(2) : 0;
-                const avgConcentration = count > 0 ? (totalConcentration / count).toFixed(2) : 0;
-                const avgFlow = count > 0 ? (totalFlow / count).toFixed(3) : 0;
-                
-                // 查找最大值和最小值
-                const validConcentrations = drill.concentration.filter(c => c !== null);
-                const maxConcentration = validConcentrations.length > 0 ? Math.max(...validConcentrations).toFixed(2) : 0;
-                const minConcentration = validConcentrations.length > 0 ? Math.min(...validConcentrations).toFixed(2) : 0;
-                
-                // 更新指标卡
-                avgPressureElement.textContent = `${avgPressure} KPa`;
-                avgConcentrationElement.textContent = `${avgConcentration}%`;
-                avgFlowElement.textContent = `${avgFlow} m³/min`;
-                initialConcentrationElement.textContent = drill.initialConcentration !== null ? 
-                    `${drill.initialConcentration.toFixed(2)}%` : '无数据';
-                maxConcentrationElement.textContent = `${maxConcentration}%`;
-                minConcentrationElement.textContent = `${minConcentration}%`;
-            } else {
-                // 组数显示模式
-                let totalPressure = 0;
-                let totalConcentration = 0;
-                let totalFlow = 0;
-                let count = 0;
-                let maxConcentration = 0;
-                let minConcentration = 100;
-                
-                dataToDisplay.forEach(drill => {
-                    drill.pressure.forEach(val => {
-                        if (val !== null) {
-                            totalPressure += val;
-                            count++;
-                        }
-                    });
-                    
-                    drill.concentration.forEach(val => {
-                        if (val !== null) {
-                            totalConcentration += val;
-                            if (val > maxConcentration) maxConcentration = val;
-                            if (val < minConcentration) minConcentration = val;
-                        }
-                    });
-                    
-                    drill.flow.forEach(val => {
-                        if (val !== null) totalFlow += val;
-                    });
-                });
-                
-                const avgPressure = count > 0 ? (totalPressure / count).toFixed(2) : 0;
-                const avgConcentration = count > 0 ? (totalConcentration / count).toFixed(2) : 0;
-                const avgFlow = count > 0 ? (totalFlow / count).toFixed(3) : 0;
-                
-                // 更新指标卡
-                avgPressureElement.textContent = `${avgPressure} KPa`;
-                avgConcentrationElement.textContent = `${avgConcentration}%`;
-                avgFlowElement.textContent = `${avgFlow} m³/min`;
-                initialConcentrationElement.textContent = 'N/A';
-                maxConcentrationElement.textContent = maxConcentration !== 0 ? `${maxConcentration.toFixed(2)}%` : '无数据';
-                minConcentrationElement.textContent = minConcentration !== 100 ? `${minConcentration.toFixed(2)}%` : '无数据';
-            }
+            });
+            
+            const avgPressure = count > 0 ? (totalPressure / count).toFixed(2) : 0;
+            const avgConcentration = count > 0 ? (totalConcentration / count).toFixed(2) : 0;
+            const avgFlow = count > 0 ? (totalFlow / count).toFixed(3) : 0;
+            
+            // 更新指标卡
+            avgPressureElement.textContent = `${avgPressure} KPa`;
+            avgConcentrationElement.textContent = `${avgConcentration}%`;
+            avgFlowElement.textContent = `${avgFlow} m³/min`;
+            initialConcentrationElement.textContent = dataToDisplay[0].initialConcentration !== null ? 
+                `${dataToDisplay[0].initialConcentration.toFixed(2)}%` : '无数据';
+            maxConcentrationElement.textContent = maxConcentration !== 0 ? `${maxConcentration.toFixed(2)}%` : '无数据';
+            minConcentrationElement.textContent = minConcentration !== 100 ? `${minConcentration.toFixed(2)}%` : '无数据';
         }
         
         // 更新表格
@@ -1915,8 +1940,18 @@
             const flowDatasets = [];
             
             const colors = ['#e74c3c', '#3498db', '#2ecc71', '#f1c40f', '#9b59b6', '#1abc9c'];
+            const drillIds = new Set(); // 用于跟踪已添加的钻孔ID
             
             dataToDisplay.forEach((drill, index) => {
+                // 检查是否已添加此钻孔的标识
+                const drillId = drill['钻孔编号'];
+                if (drillIds.has(drillId)) {
+                    // 如果已经添加过此钻孔，则不添加标签
+                    drillIds.add(drillId);
+                    return;
+                }
+                drillIds.add(drillId);
+                
                 // 过滤数据
                 const pressureData = filterDataByDateRange(
                     drill.dates, 
@@ -2066,6 +2101,7 @@
                 pressureChart = new Chart(ctx1, {
                     type: 'line',
                     data: {
+                        labels: dataToDisplay[0].dates.filter(date => date >= startDate && date <= endDate),
                         datasets: pressureDatasets
                     },
                     options: {
@@ -2091,13 +2127,6 @@
                         },
                         scales: {
                             x: {
-                                type: 'time',
-                                time: {
-                                    unit: 'day',
-                                    displayFormats: {
-                                        day: 'yyyy-MM-dd'
-                                    }
-                                },
                                 grid: {
                                     display: false
                                 },
@@ -2136,6 +2165,7 @@
                 concentrationChart = new Chart(ctx2, {
                     type: 'line',
                     data: {
+                        labels: dataToDisplay[0].dates.filter(date => date >= startDate && date <= endDate),
                         datasets: concentrationDatasets
                     },
                     options: {
@@ -2199,13 +2229,6 @@
                         },
                         scales: {
                             x: {
-                                type: 'time',
-                                time: {
-                                    unit: 'day',
-                                    displayFormats: {
-                                        day: 'yyyy-MM-dd'
-                                    }
-                                },
                                 grid: {
                                     display: false
                                 },
@@ -2245,6 +2268,7 @@
                 flowChart = new Chart(ctx3, {
                     type: 'line',
                     data: {
+                        labels: dataToDisplay[0].dates.filter(date => date >= startDate && date <= endDate),
                         datasets: flowDatasets
                     },
                     options: {
@@ -2270,13 +2294,6 @@
                         },
                         scales: {
                             x: {
-                                type: 'time',
-                                time: {
-                                    unit: 'day',
-                                    displayFormats: {
-                                        day: 'yyyy-MM-dd'
-                                    }
-                                },
                                 grid: {
                                     display: false
                                 },
