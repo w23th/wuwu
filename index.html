@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>营脚煤矿钻孔数据分析系统3333333333</title>
+    <title>营脚煤矿钻孔数据分析系统</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.1.0/dist/chartjs-plugin-annotation.min.js"></script>
@@ -21,6 +21,7 @@
             min-height: 100vh;
             padding: 15px;
             background-attachment: fixed;
+            overflow-x: hidden;
         }
         
         .container {
@@ -746,6 +747,17 @@
                 height: 42px;
             }
         }
+        
+        /* 动画 */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
 <body>
@@ -756,6 +768,7 @@
         <div class="progress-bar">
             <div class="progress" id="loading-progress"></div>
         </div>
+        <p id="loading-details">正在加载核心模块...</p>
     </div>
     
     <!-- 系统状态指示器 -->
@@ -884,7 +897,7 @@
                         <span>负压值 (KPa)</span>
                     </div>
                 </div>
-                <div class="chart-note">注：缺失数据点用实线连接前后点</div>
+                <div class="chart-note">注：实线连接所有数据点</div>
             </div>
             <div class="card">
                 <div class="chart-title"><span class="drill-id">A-1</span> <i class="fas fa-wind"></i> 瓦斯浓度变化曲线 (%)</div>
@@ -906,7 +919,7 @@
                     </div>
                 </div>
                 <div class="range-info" id="concentration-range-info">Y轴范围: 0% - 100%</div>
-                <div class="chart-note">注：缺失数据点用实线连接前后点</div>
+                <div class="chart-note">注：实线连接所有数据点</div>
             </div>
             <div class="card">
                 <div class="chart-title"><span class="drill-id">A-1</span> <i class="fas fa-fan"></i> 混合流量变化曲线 (m³/min)</div>
@@ -919,7 +932,7 @@
                         <span>混合流量 (m³/min)</span>
                     </div>
                 </div>
-                <div class="chart-note">注：缺失数据点用实线连接前后点</div>
+                <div class="chart-note">注：实线连接所有数据点</div>
             </div>
         </div>
         
@@ -1046,6 +1059,7 @@
         const statusIcon = document.getElementById('status-indicator-icon');
         const systemLoading = document.getElementById('system-loading');
         const loadingProgress = document.getElementById('loading-progress');
+        const loadingDetails = document.getElementById('loading-details');
         const singleDisplayBtn = document.getElementById('single-display');
         const groupDisplayBtn = document.getElementById('group-display');
         
@@ -1061,7 +1075,7 @@
         let pressureChart, concentrationChart, flowChart, dipPieChart, concentrationPieChart;
         
         // 存储所有钻孔数据
-        let allDrillData = [];
+        let allDrillData = {};
         let latestDataDate = '';
         let displayMode = 'single'; // 'single' 或 'group'
         let currentArea = '12802回风巷';
@@ -1313,6 +1327,7 @@
         async function initializePage() {
             // 更新加载进度
             loadingProgress.style.width = '20%';
+            loadingDetails.textContent = '正在加载数据文件...';
             updateStatus('正在加载数据文件...', 'loading');
             
             try {
@@ -1322,11 +1337,12 @@
                 
                 const csvText = await response.text();
                 const csvData = parseCSV(csvText);
-                allDrillData = groupDataByDrill(csvData);
                 
                 // 更新加载进度
                 loadingProgress.style.width = '40%';
-                updateStatus('正在解析数据...', 'loading');
+                loadingDetails.textContent = '正在解析数据...';
+                
+                allDrillData = groupDataByDrill(csvData);
                 
                 // 设置最后更新日期
                 lastUpdateElement.textContent = latestDataDate;
@@ -1405,20 +1421,20 @@
                 
                 // 更新加载进度
                 loadingProgress.style.width = '80%';
+                loadingDetails.textContent = '正在初始化图表...';
                 
                 // 初始化图表
                 updateChartsAndTable();
                 
                 // 更新加载进度
+                loadingProgress.style.width = '100%';
+                loadingDetails.textContent = '系统初始化完成！';
+                
+                // 隐藏加载界面
                 setTimeout(() => {
-                    loadingProgress.style.width = '100%';
-                    
-                    // 隐藏加载界面
-                    setTimeout(() => {
-                        systemLoading.style.display = 'none';
-                        updateStatus('系统就绪');
-                    }, 500);
-                }, 300);
+                    systemLoading.style.display = 'none';
+                    updateStatus('系统就绪');
+                }, 500);
                 
                 // 应用按钮事件监听
                 applyBtn.addEventListener('click', () => {
@@ -1434,6 +1450,8 @@
                 loadingProgress.style.width = '100%';
                 
                 // 显示错误信息
+                loadingDetails.textContent = `加载失败: ${error.message}`;
+                
                 setTimeout(() => {
                     systemLoading.innerHTML = `
                         <h2 style="color:#e74c3c;">数据加载失败</h2>
@@ -2005,14 +2023,6 @@
                     startDate, 
                     endDate
                 );
-                
-                // 计算浓度图表y轴范围
-                const concentrationRange = concentrationData.data.length > 0 ? 
-                    calculateConcentrationYAxisRange(concentrationData.data) : 
-                    { min: 0, max: 5 };
-                
-                // 更新范围信息
-                concentrationRangeInfo.textContent = `Y轴范围: ${concentrationRange.min.toFixed(2)}% - ${concentrationRange.max.toFixed(2)}%`;
                 
                 // 获取颜色
                 const color = colors[index % colors.length];
