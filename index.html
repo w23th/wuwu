@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>营脚煤矿钻孔数据分析系统11111</title>
+    <title>营脚煤矿钻孔数据分析系统</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.1.0/dist/chartjs-plugin-annotation.min.js"></script>
@@ -556,44 +556,6 @@
             100% { opacity: 0.5; }
         }
         
-        .system-loading {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(12, 28, 41, 0.95);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 2000;
-            gap: 20px;
-        }
-        
-        .system-loading h2 {
-            color: #a0d2ff;
-            font-size: 1.6rem;
-            text-align: center;
-            padding: 0 15px;
-        }
-        
-        .system-loading .progress-bar {
-            width: 250px;
-            height: 6px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 4px;
-            overflow: hidden;
-            margin-top: 15px;
-        }
-        
-        .system-loading .progress {
-            height: 100%;
-            background: linear-gradient(90deg, #3498db, #2ecc71);
-            width: 0%;
-            transition: width 0.5s ease;
-        }
-        
         .range-info {
             display: flex;
             justify-content: space-between;
@@ -749,19 +711,10 @@
     </style>
 </head>
 <body>
-    <!-- 系统加载状态 -->
-    <div class="system-loading" id="system-loading">
-        <div class="loading-spinner"></div>
-        <h2>营脚煤矿数据分析系统初始化中...</h2>
-        <div class="progress-bar">
-            <div class="progress" id="loading-progress"></div>
-        </div>
-    </div>
-    
     <!-- 系统状态指示器 -->
     <div class="system-status-indicator" id="status-indicator">
         <div class="status-indicator" id="status-indicator-icon"></div>
-        <span id="status-text">系统就绪</span>
+        <span id="status-text">系统加载中...</span>
     </div>
     
     <div class="container">
@@ -771,11 +724,11 @@
             <div class="system-status">
                 <div class="status-item">
                     <i class="fas fa-database"></i>
-                    <span>数据更新: <span id="last-update">2025-06-27</span></span>
+                    <span>数据更新: <span id="last-update">-</span></span>
                 </div>
                 <div class="status-item">
                     <i class="fas fa-exclamation-triangle"></i>
-                    <span>浓度超30%钻孔: <span id="exceed-count">5</span></span>
+                    <span>浓度超30%钻孔: <span id="exceed-count">0</span></span>
                 </div>
             </div>
         </div>
@@ -824,7 +777,7 @@
                 <div class="control-group">
                     <label for="drill-select"><i class="fas fa-drafting-compass"></i> 选择孔号/组</label>
                     <select id="drill-select">
-                        <!-- 动态填充 -->
+                        <option value="">请先选择区域和类型</option>
                     </select>
                 </div>
                 
@@ -847,34 +800,34 @@
             <div class="summary">
                 <div class="metric-box">
                     <div class="metric-label"><i class="fas fa-tachometer-alt"></i> 平均负压</div>
-                    <div class="metric-value" id="avg-pressure">5.32 KPa</div>
+                    <div class="metric-value" id="avg-pressure">-</div>
                 </div>
                 <div class="metric-box">
                     <div class="metric-label"><i class="fas fa-wind"></i> 平均瓦斯浓度</div>
-                    <div class="metric-value" id="avg-concentration">42.5%</div>
+                    <div class="metric-value" id="avg-concentration">-</div>
                 </div>
                 <div class="metric-box">
                     <div class="metric-label"><i class="fas fa-fan"></i> 平均混合流量</div>
-                    <div class="metric-value" id="avg-flow">0.218 m³/min</div>
+                    <div class="metric-value" id="avg-flow">-</div>
                 </div>
                 <div class="metric-box">
                     <div class="metric-label"><i class="fas fa-hourglass-start"></i> 始抽浓度</div>
-                    <div class="metric-value" id="initial-concentration">90.5%</div>
+                    <div class="metric-value" id="initial-concentration">-</div>
                 </div>
                 <div class="metric-box">
                     <div class="metric-label"><i class="fas fa-arrow-up"></i> 历史最高浓度</div>
-                    <div class="metric-value" id="max-concentration">92.9%</div>
+                    <div class="metric-value" id="max-concentration">-</div>
                 </div>
                 <div class="metric-box">
                     <div class="metric-label"><i class="fas fa-arrow-down"></i> 历史最低浓度</div>
-                    <div class="metric-value" id="min-concentration">6.6%</div>
+                    <div class="metric-value" id="min-concentration">-</div>
                 </div>
             </div>
         </div>
         
         <div class="charts-grid">
             <div class="card">
-                <div class="chart-title"><span class="drill-id">A-1</span> <i class="fas fa-tachometer-alt"></i> 负压变化曲线 (KPa)</div>
+                <div class="chart-title"><span class="drill-id">-</span> <i class="fas fa-tachometer-alt"></i> 负压变化曲线 (KPa)</div>
                 <div class="chart-container">
                     <canvas id="pressure-chart"></canvas>
                 </div>
@@ -887,7 +840,7 @@
                 <div class="chart-note">注：虚线表示数据缺失</div>
             </div>
             <div class="card">
-                <div class="chart-title"><span class="drill-id">A-1</span> <i class="fas fa-wind"></i> 瓦斯浓度变化曲线 (%)</div>
+                <div class="chart-title"><span class="drill-id">-</span> <i class="fas fa-wind"></i> 瓦斯浓度变化曲线 (%)</div>
                 <div class="chart-container">
                     <canvas id="concentration-chart"></canvas>
                 </div>
@@ -909,7 +862,7 @@
                 <div class="chart-note">注：虚线表示数据缺失</div>
             </div>
             <div class="card">
-                <div class="chart-title"><span class="drill-id">A-1</span> <i class="fas fa-fan"></i> 混合流量变化曲线 (m³/min)</div>
+                <div class="chart-title"><span class="drill-id">-</span> <i class="fas fa-fan"></i> 混合流量变化曲线 (m³/min)</div>
                 <div class="chart-container">
                     <canvas id="flow-chart"></canvas>
                 </div>
@@ -956,7 +909,7 @@
                 <div class="loading-spinner"></div>
                 <div class="loading-text">正在加载钻孔数据...</div>
             </div>
-            <h3><i class="fas fa-table"></i> 钻孔详细数据 - <span class="drill-id">A-1</span></h3>
+            <h3><i class="fas fa-table"></i> 钻孔详细数据 - <span class="drill-id">-</span></h3>
             <div class="data-table-container">
                 <table class="data-table">
                     <thead>
@@ -975,7 +928,7 @@
                         </tr>
                     </thead>
                     <tbody id="data-table-body">
-                        <!-- 动态填充 -->
+                        <tr><td colspan="11" style="text-align: center; padding: 30px;">等待加载数据...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -1000,7 +953,7 @@
                         </tr>
                     </thead>
                     <tbody id="high-concentration-table-body">
-                        <!-- 动态填充 -->
+                        <tr><td colspan="6" style="text-align: center; padding: 30px;">等待加载数据...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -1019,7 +972,7 @@
         </div>
         
         <div class="footer">
-            <p><i class="fas fa-copyright"></i> 营脚煤矿通防科 | 数据更新: <span id="last-update-footer">2025-06-27</span></p>
+            <p><i class="fas fa-copyright"></i> 营脚煤矿通防科 | 数据更新: <span id="last-update-footer">-</span></p>
         </div>
     </div>
 
@@ -1044,8 +997,6 @@
         const statusIndicator = document.getElementById('status-indicator');
         const statusText = document.getElementById('status-text');
         const statusIcon = document.getElementById('status-indicator-icon');
-        const systemLoading = document.getElementById('system-loading');
-        const loadingProgress = document.getElementById('loading-progress');
         const singleDisplayBtn = document.getElementById('single-display');
         const groupDisplayBtn = document.getElementById('group-display');
         
@@ -1069,8 +1020,8 @@
         let currentUnit = '一单元';
         let currentSelection = ''; // 当前选择的孔号或组
         
-        // CSV文件路径 - 使用相对路径
-        const CSV_FILE_PATH = './data.csv';
+        // CSV文件路径
+        const CSV_FILE_PATH = 'data.csv';
         
         // 获取今天的日期（YYYY-MM-DD格式）
         function getTodayDate() {
@@ -1108,16 +1059,9 @@
             }
         }
         
-        // 解析CSV数据 - 添加BOM字符处理
+        // 解析CSV数据
         function parseCSV(csvText) {
-            // 去除BOM字符
-            if (csvText.charCodeAt(0) === 0xFEFF) {
-                csvText = csvText.substring(1);
-            }
-            
             const lines = csvText.split('\n').filter(line => line.trim() !== '');
-            if (lines.length === 0) return [];
-            
             const headers = lines[0].split(',').map(header => header.trim());
             
             const data = [];
@@ -1318,9 +1262,7 @@
         
         // 初始化页面
         async function initializePage() {
-            // 显示加载状态
-            systemLoading.style.display = 'flex';
-            updateStatus('正在加载数据文件...', 'loading');
+            updateStatus('正在加载数据...', 'loading');
             
             try {
                 // 加载CSV文件
@@ -1329,14 +1271,7 @@
                 
                 const csvText = await response.text();
                 const csvData = parseCSV(csvText);
-                
-                if (csvData.length === 0) {
-                    throw new Error('CSV文件为空或格式不正确');
-                }
-                
                 allDrillData = groupDataByDrill(csvData);
-                
-                updateStatus('正在解析数据...', 'loading');
                 
                 // 设置最后更新日期
                 lastUpdateElement.textContent = latestDataDate;
@@ -1416,31 +1351,32 @@
                 // 初始化图表
                 updateChartsAndTable();
                 
-                // 隐藏加载界面
-                systemLoading.style.display = 'none';
-                updateStatus('系统就绪');
-                
                 // 应用按钮事件监听
                 applyBtn.addEventListener('click', () => {
                     updateStatus('处理数据中...', 'loading');
                     updateChartsAndTable();
                 });
                 
+                updateStatus('系统就绪');
+                
             } catch (error) {
                 console.error('数据加载失败:', error);
                 updateStatus('数据加载失败', 'error');
                 
                 // 显示错误信息
-                systemLoading.innerHTML = `
-                    <h2 style="color:#e74c3c;">数据加载失败</h2>
-                    <p style="color:#f0f0f0; max-width:500px; text-align:center;">
-                        无法加载数据文件: ${error.message}<br>
-                        请确保data.csv文件存在且格式正确
-                    </p>
-                    <button id="retry-btn" class="btn-apply" style="margin-top:20px;">
+                const errorMsg = document.createElement('div');
+                errorMsg.className = 'card';
+                errorMsg.style.background = 'rgba(231, 76, 60, 0.2)';
+                errorMsg.innerHTML = `
+                    <h3 style="color:#e74c3c;"><i class="fas fa-exclamation-circle"></i> 数据加载失败</h3>
+                    <p>无法加载数据文件: ${error.message}</p>
+                    <p>请确保data.csv文件存在且格式正确</p>
+                    <button id="retry-btn" class="btn-apply" style="margin-top:15px;">
                         <i class="fas fa-redo"></i> 重新加载
                     </button>
                 `;
+                
+                document.querySelector('.container').insertBefore(errorMsg, document.querySelector('.card'));
                 
                 document.getElementById('retry-btn').addEventListener('click', initializePage);
             }
@@ -1717,6 +1653,8 @@
                     el.textContent = dataToDisplay[0]['钻孔编号'];
                 } else if (displayMode === 'group') {
                     el.textContent = currentSelection;
+                } else {
+                    el.textContent = '-';
                 }
             });
             
