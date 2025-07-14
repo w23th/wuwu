@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>营脚煤矿钻孔数据分析系统666</title>
+    <title>营脚煤矿钻孔数据分析系统777</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.1.0/dist/chartjs-plugin-annotation.min.js"></script>
@@ -1031,6 +1031,15 @@
     </div>
 
     <script>
+        // 加载状态控制
+        function showLoading() {
+            document.getElementById('loading-overlay').classList.add('active');
+        }
+
+        function hideLoading() {
+            document.getElementById('loading-overlay').classList.remove('active');
+        }
+
         // 获取DOM元素
         const areaSelect = document.getElementById('area-select');
         const drillTypeSelect = document.getElementById('drill-type');
@@ -1086,6 +1095,8 @@
 
 // 修改数据加载逻辑
 async function loadData() {
+            showLoading();
+            try {
     const response = await fetch('data.csv');
     const rawData = await response.text();
     return Papa.parse(rawData, {
@@ -1093,8 +1104,9 @@ async function loadData() {
         dynamicTyping: true,
         skipEmptyLines: true
     }).data;
-}
-        
+            } finally {
+                hideLoading();
+            } 
         // 获取今天的日期（YYYY-MM-DD格式）
         function getTodayDate() {
             const today = new Date();
@@ -1404,6 +1416,23 @@ async function loadData() {
                         startDateInput.value = '2025-05-01';
                         endDateInput.value = getTodayDate();
                     }
+
+                    // 动态生成高位钻孔孔号选项
+                    if (currentDrillType === '高位钻孔') {
+                        const holes = new Set();
+                        Object.values(allDrillData).forEach(drill => {
+                            if (drill['钻孔性质'] === '高位钻孔' && drill['抽采区域'] === currentArea) {
+                                holes.add(drill['钻孔编号']);
+                            }
+                        });
+                        const holeSelect = document.getElementById('holeNumberSelect');
+                        holeSelect.innerHTML = Array.from(holes).map(h => 
+                            `<option value="${h}">${h}</option>`
+                        ).join('');
+                        document.getElementById('holeNumberGroup').style.display = 'block';
+                    } else {
+                        document.getElementById('holeNumberGroup').style.display = 'none';
+                    }
                     
                     updateStatus('钻孔类型已变更...', 'loading');
                 });
@@ -1469,6 +1498,7 @@ async function loadData() {
                 
                 // 应用按钮事件监听
                 applyBtn.addEventListener('click', () => {
+                    showLoading();
                     updateStatus('处理数据中...', 'loading');
                     updateChartsAndTable();
                 });
@@ -1801,6 +1831,7 @@ async function loadData() {
                     tableLoadingOverlay.classList.remove('active');
                     alertLoadingOverlay.classList.remove('active');
                     updateStatus('系统就绪');
+                    hideLoading();
                 }, 300);
             }, 50);
         }
