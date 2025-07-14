@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>营脚煤矿钻孔数据分析系统666</title>
+    <title>营脚煤矿钻孔数据分析系统5555</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.1.0/dist/chartjs-plugin-annotation.min.js"></script>
@@ -1114,73 +1114,47 @@
         }
         
         // 解析CSV数据
-        function parseCSV(csv) {
-    const lines = csv.split('\n');
-    const headers = lines[0].split(',').map(header => header.trim());
-    const result = {};
-    
-    // 更新加载进度
-    updateLoadingProgress(30);
-    
-    for (let i = 1; i < lines.length; i++) {
-        const line = lines[i].trim();
-        if (!line) continue;
-        
-        const values = line.split(',');
-        const drillId = values[5]; // 钻孔编号
-        
-        // 修复：统一日期格式为YYYY-MM-DD
-        const dateStr = values[0].replace(/\//g, '-');
-        
-        if (!result[drillId]) {
-            // 初始化新钻孔数据
-            result[drillId] = {
-                '钻孔编号': drillId,
-                '抽采区域': values[1],
-                '钻孔性质': values[2],
-                '抽采单元': values[3],
-                '抽采组数': values[4],
-                '方位': parseFloat(values[6]) || null,
-                '倾角': parseFloat(values[7]) || null,
-                '孔深': parseFloat(values[8]) || null,
-                dates: [],
-                pressure: [], // 负压
-                concentration: [], // 瓦斯浓度
-                flow: [], // 混合流量
-                initialDate: null,
-                initialConcentration: null,
-                initialPressure: null
-            };
+        function parseCSV(csvText) {
+            const lines = csvText.split('\n').filter(line => line.trim() !== '');
+            const headers = lines[0].split(',').map(header => header.trim());
+            
+            const data = [];
+            for (let i = 1; i < lines.length; i++) {
+                const values = lines[i].split(',');
+                const entry = {};
+                
+                for (let j = 0; j < headers.length; j++) {
+                    let value = values[j] ? values[j].trim() : '';
+                    
+                    // 转换数值类型
+                    if (['负压', '瓦斯浓度', '混合流量', '方位', '倾角', '孔深'].includes(headers[j])) {
+                        value = value === '' ? null : parseFloat(value);
+                    }
+                    
+                    // 标准化日期格式
+                    if (headers[j] === '检测日期' && value) {
+                        const dateParts = value.split('/');
+                        if (dateParts.length === 3) {
+                            const year = dateParts[0];
+                            const month = dateParts[1].padStart(2, '0');
+                            const day = dateParts[2].padStart(2, '0');
+                            value = `${year}-${month}-${day}`;
+                        }
+                    }
+                    
+                    entry[headers[j]] = value;
+                }
+                
+                // 添加抽采组数默认值
+                if (!entry['抽采组数'] || entry['抽采组数'] === '') {
+                    entry['抽采组数'] = 'N/A';
+                }
+                
+                data.push(entry);
+            }
+            
+            return data;
         }
-        
-        const drill = result[drillId];
-        drill.dates.push(dateStr);
-        
-        // 解析数值，处理空值
-        const pressure = values[9] ? parseFloat(values[9]) : null;
-        const concentration = values[10] ? parseFloat(values[10]) : null;
-        const flow = values[11] ? parseFloat(values[11]) : null;
-        
-        drill.pressure.push(pressure);
-        drill.concentration.push(concentration);
-        drill.flow.push(flow);
-        
-        // 记录初始数据
-        if (!drill.initialDate) {
-            drill.initialDate = dateStr;
-            drill.initialConcentration = concentration;
-            drill.initialPressure = pressure;
-        }
-        
-        // 更新最新数据日期
-        if (!latestDataDate || new Date(dateStr) > new Date(latestDataDate)) {
-            latestDataDate = dateStr;
-        }
-    }
-    
-    updateLoadingProgress(60);
-    return result;
-}
         
         // 将CSV数据转换为按钻孔分组的数据结构
         function groupDataByDrill(csvData) {
@@ -1278,42 +1252,57 @@
         }
         
         // 更新孔号/组选择框
-        function populateDrillSelect() {
-    const area = areaSelect.value;
-    const drillType = drillTypeSelect.value;
-    const unit = unitSelect.value;
-    const drillSelect = document.getElementById('drill-select');
-    
-    // 清空当前选项
-    drillSelect.innerHTML = '';
-    
-    // 修复：将对象转换为数组后再筛选
-    const drillArray = Object.values(allDrillData);
-    
-    // 根据条件筛选钻孔
-    const filteredDrills = drillArray.filter(drill => 
-        drill['抽采区域'] === area && 
-        drill['钻孔性质'] === drillType && 
-        (drill['抽采单元'] === unit || drill['抽采组数'] === unit)
-    );
-    
-    // 提取唯一的钻孔编号
-    const drillIds = [...new Set(filteredDrills.map(drill => drill['钻孔编号']))];
-    
-    // 添加选项
-    drillIds.forEach(id => {
-        const option = document.createElement('option');
-        option.value = id;
-        option.textContent = id;
-        drillSelect.appendChild(option);
-    });
-    
-    // 如果有选项，设置第一个为选中
-    if (drillIds.length > 0) {
-        drillSelect.value = drillIds[0];
-        currentSelection = drillIds[0];
-    }
-}
+        function updateDrillSelect() {
+            const select = document.getElementById('drill-select');
+            select.innerHTML = '';
+            
+            let options = [];
+            
+            if (displayMode === 'single') {
+                // 单孔显示：使用单孔索引
+                const key = `${currentArea}|${currentDrillType}|${currentUnit}`;
+                const drillKeys = singleDrillIndex[key] || [];
+                drillKeys.forEach(drillKey => {
+                    const drill = allDrillData[drillKey];
+                    options.push({
+                        value: drillKey,
+                        text: drill['钻孔编号']
+                    });
+                });
+                options.sort((a, b) => a.text.localeCompare(b.text));
+            } else {
+                // 组数显示：使用组索引
+                const groups = new Set();
+                const prefix = `${currentArea}|${currentDrillType}|`;
+                Object.keys(groupDrillIndex).forEach(fullKey => {
+                    if (fullKey.startsWith(prefix)) {
+                        const group = fullKey.split('|')[2];
+                        groups.add(group);
+                    }
+                });
+                options = Array.from(groups).sort().map(group => ({
+                    value: group,
+                    text: group
+                }));
+            }
+            
+            // 填充下拉框
+            options.forEach(option => {
+                const optElement = document.createElement('option');
+                optElement.value = option.value;
+                optElement.textContent = option.text;
+                select.appendChild(optElement);
+            });
+            
+            // 默认选择第一个
+            if (options.length > 0) {
+                select.value = options[0].value;
+                currentSelection = options[0].value;
+            } else {
+                select.value = '';
+                currentSelection = '';
+            }
+        }
         
         // 根据区域更新钻孔类型选项
         function updateDrillTypeOptions() {
@@ -1499,53 +1488,45 @@
         
         // 获取要显示的数据
         function getDataToDisplay() {
-    const area = areaSelect.value;
-    const drillType = drillTypeSelect.value;
-    const unit = unitSelect.value;
-    const drillId = drillSelect.value;
-    
-    // 修复：将对象转换为数组
-    const drillArray = Object.values(allDrillData);
-    
-    if (displayMode === 'single') {
-        // 单孔显示
-        return drillArray.filter(drill => 
-            drill['钻孔编号'] === drillId &&
-            drill['抽采区域'] === area && 
-            drill['钻孔性质'] === drillType
-        );
-    } else {
-        // 组数显示
-        return drillArray.filter(drill => 
-            drill['抽采区域'] === area && 
-            drill['钻孔性质'] === drillType && 
-            (drill['抽采单元'] === currentSelection || drill['抽采组数'] === currentSelection)
-        );
-    }
-}
+            const dataToDisplay = [];
+            
+            if (displayMode === 'single') {
+                // 单孔显示：直接取该钻孔的数据
+                if (allDrillData[currentSelection]) {
+                    dataToDisplay.push(allDrillData[currentSelection]);
+                }
+            } else {
+                // 组数显示：使用组索引获取该组所有钻孔的数据
+                const key = `${currentArea}|${currentDrillType}|${currentSelection}`;
+                const drillKeys = groupDrillIndex[key] || [];
+                drillKeys.forEach(drillKey => {
+                    if (allDrillData[drillKey]) {
+                        dataToDisplay.push(allDrillData[drillKey]);
+                    }
+                });
+            }
+            
+            return dataToDisplay;
+        }
         
         // 过滤数据函数
         function filterDataByDateRange(dates, data, startDate, endDate) {
-    const filteredDates = [];
-    const filteredData = [];
-    
-    // 修复：将日期字符串转换为Date对象进行比较
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    
-    for (let i = 0; i < dates.length; i++) {
-        const date = new Date(dates[i]);
-        if (date >= start && date <= end) {
-            filteredDates.push(dates[i]);
-            filteredData.push(data[i]);
+            const filteredDates = [];
+            const filteredData = [];
+            
+            for (let i = 0; i < dates.length; i++) {
+                const dateStr = dates[i];
+                if (dateStr >= startDate && dateStr <= endDate) {
+                    filteredDates.push(dateStr);
+                    filteredData.push(data[i]);
+                }
+            }
+            
+            return { 
+                dates: filteredDates, 
+                data: filteredData
+            };
         }
-    }
-    
-    return { 
-        dates: filteredDates, 
-        data: filteredData
-    };
-}
         
         // 获取今日高浓度钻孔数据
         function getTodayHighConcentrationDrills() {
