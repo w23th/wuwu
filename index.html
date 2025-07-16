@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>营脚煤矿钻孔数据分析系统</title>
+    <title>营脚煤矿钻孔数据分析系统111</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.1.0/dist/chartjs-plugin-annotation.min.js"></script>
@@ -649,6 +649,13 @@
             pointer-events: none;
         }
         
+        .chart-note {
+            font-size: 0.75rem;
+            color: #a0d2ff;
+            text-align: center;
+            margin-top: 5px;
+        }
+        
         /* 响应式调整 */
         @media (max-width: 1200px) {
             .charts-grid, .pie-charts-container {
@@ -876,11 +883,8 @@
                         <div class="legend-color" style="background: #e74c3c;"></div>
                         <span>负压值 (KPa)</span>
                     </div>
-                    <div class="legend-item">
-                        <div class="legend-alert" style="background: #888;"></div>
-                        <span>缺失数据 (虚线)</span>
-                    </div>
                 </div>
+                <div class="chart-note">注：虚线表示数据缺失</div>
             </div>
             <div class="card">
                 <div class="chart-title"><span class="drill-id">A-1</span> <i class="fas fa-wind"></i> 瓦斯浓度变化曲线 (%)</div>
@@ -900,12 +904,9 @@
                         <div class="legend-alert" style="background: #e74c3c;"></div>
                         <span>严重超标 (85%)</span>
                     </div>
-                    <div class="legend-item">
-                        <div class="legend-alert" style="background: #888;"></div>
-                        <span>缺失数据 (虚线)</span>
-                    </div>
                 </div>
                 <div class="range-info" id="concentration-range-info">Y轴范围: 0% - 100%</div>
+                <div class="chart-note">注：虚线表示数据缺失</div>
             </div>
             <div class="card">
                 <div class="chart-title"><span class="drill-id">A-1</span> <i class="fas fa-fan"></i> 混合流量变化曲线 (m³/min)</div>
@@ -917,11 +918,8 @@
                         <div class="legend-color" style="background: #2ecc71;"></div>
                         <span>混合流量 (m³/min)</span>
                     </div>
-                    <div class="legend-item">
-                        <div class="legend-alert" style="background: #888;"></div>
-                        <span>缺失数据 (虚线)</span>
-                    </div>
                 </div>
+                <div class="chart-note">注：虚线表示数据缺失</div>
             </div>
         </div>
         
@@ -1016,7 +1014,8 @@
             <p><i class="fas fa-check"></i> 点击"应用筛选"按钮更新图表和表格数据</p>
             <p><i class="fas fa-check"></i> 图表显示选定钻孔或组的负压、浓度和流量变化曲线</p>
             <p><i class="fas fa-check"></i> 今日瓦斯浓度超过30%的钻孔编号已标红显示</p>
-            <p><i class="fas fa-check"></i> 缺失数据点用虚线连接，方便查看趋势</p>
+            <p><i class="fas fa-check"></i> 虚线表示数据缺失点，用于显示趋势</p>
+            <p><i class="fas fa-check"></i> 顺层钻孔与穿层钻孔检测周期为一周，高位钻孔为每日检测</p>
         </div>
         
         <div class="footer">
@@ -1080,6 +1079,17 @@
             const year = today.getFullYear();
             const month = String(today.getMonth() + 1).padStart(2, '0');
             const day = String(today.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+        
+        // 获取一周前的日期
+        function getOneWeekAgoDate() {
+            const today = new Date();
+            const oneWeekAgo = new Date(today);
+            oneWeekAgo.setDate(today.getDate() - 7);
+            const year = oneWeekAgo.getFullYear();
+            const month = String(oneWeekAgo.getMonth() + 1).padStart(2, '0');
+            const day = String(oneWeekAgo.getDate()).padStart(2, '0');
             return `${year}-${month}-${day}`;
         }
         
@@ -1337,6 +1347,16 @@
                     updateUnitControl();
                     updateDisplayMode();
                     updateDrillSelect();
+                    
+                    // 根据钻孔类型设置默认日期范围
+                    if (currentDrillType === '顺层钻孔' || currentDrillType === '穿层钻孔') {
+                        startDateInput.value = getOneWeekAgoDate();
+                        endDateInput.value = getTodayDate();
+                    } else {
+                        startDateInput.value = '2025-05-01';
+                        endDateInput.value = getTodayDate();
+                    }
+                    
                     updateStatus('钻孔类型已变更...', 'loading');
                 });
                 
@@ -1375,9 +1395,14 @@
                 updateDisplayMode();
                 updateDrillSelect();
                 
-                // 设置默认日期范围
-                startDateInput.value = '2025-05-01';
-                endDateInput.value = getTodayDate();
+                // 根据钻孔类型设置默认日期范围
+                if (currentDrillType === '顺层钻孔' || currentDrillType === '穿层钻孔') {
+                    startDateInput.value = getOneWeekAgoDate();
+                    endDateInput.value = getTodayDate();
+                } else {
+                    startDateInput.value = '2025-05-01';
+                    endDateInput.value = getTodayDate();
+                }
                 
                 // 更新加载进度
                 loadingProgress.style.width = '80%';
@@ -1982,7 +2007,7 @@
                                     pointRadius: 0,
                                     tension: 0.2,
                                     fill: false,
-                                    label: '缺失数据'
+                                    label: '' // 不显示图例标签
                                 };
                             }
                             
