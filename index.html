@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>营脚煤矿钻孔数据分析系统222</title>
+    <title>营脚煤矿钻孔数据分析系统</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.1.0/dist/chartjs-plugin-annotation.min.js"></script>
@@ -1062,7 +1062,6 @@
         
         // 存储所有钻孔数据
         let allDrillData = [];
-        let filteredDrillData = [];
         let latestDataDate = '';
         let displayMode = 'single'; // 'single' 或 'group'
         let currentArea = '12802回风巷';
@@ -1666,8 +1665,8 @@
                         }]
                     },
                     options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
+                        responsive: true;
+                        maintainAspectRatio: false;
                         plugins: {
                             legend: {
                                 position: 'right',
@@ -1758,7 +1757,7 @@
         
         // 更新指标卡
         function updateMetrics(dataToDisplay) {
-            if (dataToDisplay.length === 0 || displayMode === 'group') {
+            if (dataToDisplay.length === 0) {
                 avgPressureElement.textContent = '无数据';
                 avgConcentrationElement.textContent = '无数据';
                 avgFlowElement.textContent = '无数据';
@@ -1768,16 +1767,17 @@
                 return;
             }
             
-            // 计算平均值
-            let totalPressure = 0;
-            let totalConcentration = 0;
-            let totalFlow = 0;
-            let count = 0;
-            let maxConcentration = 0;
-            let minConcentration = 100;
-            
-            dataToDisplay.forEach(drill => {
-                drill.pressure.forEach((val, index) => {
+            if (displayMode === 'single') {
+                // 单孔显示模式
+                const drill = dataToDisplay[0];
+                
+                // 计算平均值
+                let totalPressure = 0;
+                let totalConcentration = 0;
+                let totalFlow = 0;
+                let count = 0;
+                
+                drill.pressure.forEach(val => {
                     if (val !== null) {
                         totalPressure += val;
                         count++;
@@ -1785,30 +1785,72 @@
                 });
                 
                 drill.concentration.forEach(val => {
-                    if (val !== null) {
-                        totalConcentration += val;
-                        if (val > maxConcentration) maxConcentration = val;
-                        if (val < minConcentration) minConcentration = val;
-                    }
+                    if (val !== null) totalConcentration += val;
                 });
                 
                 drill.flow.forEach(val => {
                     if (val !== null) totalFlow += val;
                 });
-            });
-            
-            const avgPressure = count > 0 ? (totalPressure / count).toFixed(2) : 0;
-            const avgConcentration = count > 0 ? (totalConcentration / count).toFixed(2) : 0;
-            const avgFlow = count > 0 ? (totalFlow / count).toFixed(3) : 0;
-            
-            // 更新指标卡
-            avgPressureElement.textContent = `${avgPressure} KPa`;
-            avgConcentrationElement.textContent = `${avgConcentration}%`;
-            avgFlowElement.textContent = `${avgFlow} m³/min`;
-            initialConcentrationElement.textContent = dataToDisplay[0].initialConcentration !== null ? 
-                `${dataToDisplay[0].initialConcentration.toFixed(2)}%` : '无数据';
-            maxConcentrationElement.textContent = maxConcentration !== 0 ? `${maxConcentration.toFixed(2)}%` : '无数据';
-            minConcentrationElement.textContent = minConcentration !== 100 ? `${minConcentration.toFixed(2)}%` : '无数据';
+                
+                const avgPressure = count > 0 ? (totalPressure / count).toFixed(2) : 0;
+                const avgConcentration = count > 0 ? (totalConcentration / count).toFixed(2) : 0;
+                const avgFlow = count > 0 ? (totalFlow / count).toFixed(3) : 0;
+                
+                // 查找最大值和最小值
+                const validConcentrations = drill.concentration.filter(c => c !== null);
+                const maxConcentration = validConcentrations.length > 0 ? Math.max(...validConcentrations).toFixed(2) : 0;
+                const minConcentration = validConcentrations.length > 0 ? Math.min(...validConcentrations).toFixed(2) : 0;
+                
+                // 更新指标卡
+                avgPressureElement.textContent = `${avgPressure} KPa`;
+                avgConcentrationElement.textContent = `${avgConcentration}%`;
+                avgFlowElement.textContent = `${avgFlow} m³/min`;
+                initialConcentrationElement.textContent = drill.initialConcentration !== null ? 
+                    `${drill.initialConcentration.toFixed(2)}%` : '无数据';
+                maxConcentrationElement.textContent = `${maxConcentration}%`;
+                minConcentrationElement.textContent = `${minConcentration}%`;
+            } else {
+                // 组数显示模式
+                let totalPressure = 0;
+                let totalConcentration = 0;
+                let totalFlow = 0;
+                let count = 0;
+                let maxConcentration = 0;
+                let minConcentration = 100;
+                
+                dataToDisplay.forEach(drill => {
+                    drill.pressure.forEach(val => {
+                        if (val !== null) {
+                            totalPressure += val;
+                            count++;
+                        }
+                    });
+                    
+                    drill.concentration.forEach(val => {
+                        if (val !== null) {
+                            totalConcentration += val;
+                            if (val > maxConcentration) maxConcentration = val;
+                            if (val < minConcentration) minConcentration = val;
+                        }
+                    });
+                    
+                    drill.flow.forEach(val => {
+                        if (val !== null) totalFlow += val;
+                    });
+                });
+                
+                const avgPressure = count > 0 ? (totalPressure / count).toFixed(2) : 0;
+                const avgConcentration = count > 0 ? (totalConcentration / count).toFixed(2) : 0;
+                const avgFlow = count > 0 ? (totalFlow / count).toFixed(3) : 0;
+                
+                // 更新指标卡
+                avgPressureElement.textContent = `${avgPressure} KPa`;
+                avgConcentrationElement.textContent = `${avgConcentration}%`;
+                avgFlowElement.textContent = `${avgFlow} m³/min`;
+                initialConcentrationElement.textContent = 'N/A';
+                maxConcentrationElement.textContent = maxConcentration !== 0 ? `${maxConcentration.toFixed(2)}%` : '无数据';
+                minConcentrationElement.textContent = minConcentration !== 100 ? `${minConcentration.toFixed(2)}%` : '无数据';
+            }
         }
         
         // 更新表格
@@ -1940,18 +1982,8 @@
             const flowDatasets = [];
             
             const colors = ['#e74c3c', '#3498db', '#2ecc71', '#f1c40f', '#9b59b6', '#1abc9c'];
-            const drillIds = new Set(); // 用于跟踪已添加的钻孔ID
             
             dataToDisplay.forEach((drill, index) => {
-                // 检查是否已添加此钻孔的标识
-                const drillId = drill['钻孔编号'];
-                if (drillIds.has(drillId)) {
-                    // 如果已经添加过此钻孔，则不添加标签
-                    drillIds.add(drillId);
-                    return;
-                }
-                drillIds.add(drillId);
-                
                 // 过滤数据
                 const pressureData = filterDataByDateRange(
                     drill.dates, 
@@ -2101,7 +2133,6 @@
                 pressureChart = new Chart(ctx1, {
                     type: 'line',
                     data: {
-                        labels: dataToDisplay[0].dates.filter(date => date >= startDate && date <= endDate),
                         datasets: pressureDatasets
                     },
                     options: {
@@ -2127,6 +2158,13 @@
                         },
                         scales: {
                             x: {
+                                type: 'time',
+                                time: {
+                                    unit: 'day',
+                                    displayFormats: {
+                                        day: 'yyyy-MM-dd'
+                                    }
+                                },
                                 grid: {
                                     display: false
                                 },
@@ -2165,7 +2203,6 @@
                 concentrationChart = new Chart(ctx2, {
                     type: 'line',
                     data: {
-                        labels: dataToDisplay[0].dates.filter(date => date >= startDate && date <= endDate),
                         datasets: concentrationDatasets
                     },
                     options: {
@@ -2229,6 +2266,13 @@
                         },
                         scales: {
                             x: {
+                                type: 'time',
+                                time: {
+                                    unit: 'day',
+                                    displayFormats: {
+                                        day: 'yyyy-MM-dd'
+                                    }
+                                },
                                 grid: {
                                     display: false
                                 },
@@ -2268,7 +2312,6 @@
                 flowChart = new Chart(ctx3, {
                     type: 'line',
                     data: {
-                        labels: dataToDisplay[0].dates.filter(date => date >= startDate && date <= endDate),
                         datasets: flowDatasets
                     },
                     options: {
@@ -2294,6 +2337,13 @@
                         },
                         scales: {
                             x: {
+                                type: 'time',
+                                time: {
+                                    unit: 'day',
+                                    displayFormats: {
+                                        day: 'yyyy-MM-dd'
+                                    }
+                                },
                                 grid: {
                                     display: false
                                 },
