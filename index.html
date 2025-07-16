@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>营脚煤矿钻孔数据分析系统777</title>
+    <title>营脚煤矿钻孔数据分析系统</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.1.0/dist/chartjs-plugin-annotation.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <style>
         * {
             margin: 0;
@@ -151,12 +151,10 @@
             display: flex;
             gap: 10px;
             align-items: center;
-            flex-wrap: wrap;
         }
         
         .date-range input {
             min-width: 140px;
-            flex: 1;
         }
         
         .btn-apply, .btn-upload {
@@ -650,13 +648,6 @@
             pointer-events: none;
         }
         
-        .chart-note {
-            font-size: 0.75rem;
-            color: #a0d2ff;
-            text-align: center;
-            margin-top: 5px;
-        }
-        
         /* 响应式调整 */
         @media (max-width: 1200px) {
             .charts-grid, .pie-charts-container {
@@ -838,12 +829,6 @@
                     </div>
                 </div>
                 
-                <div class="control-group" id="holeNumberGroup" style="display:none;">
-                    <label><i class="fas fa-hashtag"></i>选择孔号</label>
-                    <select id="holeNumberSelect">
-                        <option value="">加载中...</option>
-                    </select>
-                </div>
                 <div class="control-group">
                     <button id="apply-date" class="btn-apply">
                         <i class="fas fa-sync-alt"></i> 应用筛选
@@ -890,8 +875,11 @@
                         <div class="legend-color" style="background: #e74c3c;"></div>
                         <span>负压值 (KPa)</span>
                     </div>
+                    <div class="legend-item">
+                        <div class="legend-alert" style="background: #888;"></div>
+                        <span>缺失数据 (虚线)</span>
+                    </div>
                 </div>
-                <div class="chart-note">注：虚线表示数据缺失</div>
             </div>
             <div class="card">
                 <div class="chart-title"><span class="drill-id">A-1</span> <i class="fas fa-wind"></i> 瓦斯浓度变化曲线 (%)</div>
@@ -911,9 +899,12 @@
                         <div class="legend-alert" style="background: #e74c3c;"></div>
                         <span>严重超标 (85%)</span>
                     </div>
+                    <div class="legend-item">
+                        <div class="legend-alert" style="background: #888;"></div>
+                        <span>缺失数据 (虚线)</span>
+                    </div>
                 </div>
                 <div class="range-info" id="concentration-range-info">Y轴范围: 0% - 100%</div>
-                <div class="chart-note">注：虚线表示数据缺失</div>
             </div>
             <div class="card">
                 <div class="chart-title"><span class="drill-id">A-1</span> <i class="fas fa-fan"></i> 混合流量变化曲线 (m³/min)</div>
@@ -925,8 +916,11 @@
                         <div class="legend-color" style="background: #2ecc71;"></div>
                         <span>混合流量 (m³/min)</span>
                     </div>
+                    <div class="legend-item">
+                        <div class="legend-alert" style="background: #888;"></div>
+                        <span>缺失数据 (虚线)</span>
+                    </div>
                 </div>
-                <div class="chart-note">注：虚线表示数据缺失</div>
             </div>
         </div>
         
@@ -1021,8 +1015,7 @@
             <p><i class="fas fa-check"></i> 点击"应用筛选"按钮更新图表和表格数据</p>
             <p><i class="fas fa-check"></i> 图表显示选定钻孔或组的负压、浓度和流量变化曲线</p>
             <p><i class="fas fa-check"></i> 今日瓦斯浓度超过30%的钻孔编号已标红显示</p>
-            <p><i class="fas fa-check"></i> 虚线表示数据缺失点，用于显示趋势</p>
-            <p><i class="fas fa-check"></i> 顺层钻孔与穿层钻孔检测周期为一周，高位钻孔为每日检测</p>
+            <p><i class="fas fa-check"></i> 缺失数据点用虚线连接，方便查看趋势</p>
         </div>
         
         <div class="footer">
@@ -1031,15 +1024,6 @@
     </div>
 
     <script>
-        // 加载状态控制
-        function showLoading() {
-            document.getElementById('loading-overlay').classList.add('active');
-        }
-
-        function hideLoading() {
-            document.getElementById('loading-overlay').classList.remove('active');
-        }
-
         // 获取DOM元素
         const areaSelect = document.getElementById('area-select');
         const drillTypeSelect = document.getElementById('drill-type');
@@ -1086,44 +1070,15 @@
         let currentUnit = '一单元';
         let currentSelection = ''; // 当前选择的孔号或组
         
-        // 数据索引
-        let singleDrillIndex = {};
-        let groupDrillIndex = {};
-        
         // CSV文件路径
         const CSV_FILE_PATH = 'data.csv';
-
-// 修改数据加载逻辑
-async function loadData() {
-            showLoading();
-            try {
-    const response = await fetch('data.csv');
-    const rawData = await response.text();
-    return Papa.parse(rawData, {
-        header: true,
-        dynamicTyping: true,
-        skipEmptyLines: true
-    }).data;
-            } finally {
-                hideLoading();
-            } 
+        
         // 获取今天的日期（YYYY-MM-DD格式）
         function getTodayDate() {
             const today = new Date();
             const year = today.getFullYear();
             const month = String(today.getMonth() + 1).padStart(2, '0');
             const day = String(today.getDate()).padStart(2, '0');
-            return `${year}-${month}-${day}`;
-        }
-        
-        // 获取一周前的日期
-        function getOneWeekAgoDate() {
-            const today = new Date();
-            const oneWeekAgo = new Date(today);
-            oneWeekAgo.setDate(today.getDate() - 7);
-            const year = oneWeekAgo.getFullYear();
-            const month = String(oneWeekAgo.getMonth() + 1).padStart(2, '0');
-            const day = String(oneWeekAgo.getDate()).padStart(2, '0');
             return `${year}-${month}-${day}`;
         }
         
@@ -1186,7 +1141,7 @@ async function loadData() {
             return data;
         }
         
-        // 将CSV数据转换为按钻孔分组的数据结构
+        // 将CSV数据转换为按钻孔编号分组的数据结构
         function groupDataByDrill(csvData) {
             const groupedData = {};
             
@@ -1194,19 +1149,16 @@ async function loadData() {
             const dates = csvData.map(item => item['检测日期']).filter(d => d);
             latestDataDate = dates.length > 0 ? dates.reduce((a, b) => a > b ? a : b) : getTodayDate();
             
-            // 按钻孔唯一标识分组
+            // 按钻孔编号分组
             csvData.forEach(item => {
-                // 创建唯一键：区域 + 单元/组数 + 钻孔编号
-                const unitGroupKey = item['抽采单元'] || item['抽采组数'] || '';
-                const drillKey = `${item['抽采区域']}|${unitGroupKey}|${item['钻孔编号']}`;
+                const drillId = item['钻孔编号'];
                 
-                if (!groupedData[drillKey]) {
-                    groupedData[drillKey] = {
+                if (!groupedData[drillId]) {
+                    groupedData[drillId] = {
                         '抽采区域': item['抽采区域'],
-                        '抽采单元': item['抽采单元'] || '',
+                        '抽采单元': item['抽采单元'],
                         '钻孔性质': item['钻孔性质'],
-                        '抽采组数': item['抽采组数'] || '',
-                        '钻孔编号': item['钻孔编号'],
+                        '抽采组数': item['抽采组数'],
                         '方位': item['方位'],
                         '倾角': item['倾角'],
                         '孔深': item['孔深'],
@@ -1222,23 +1174,23 @@ async function loadData() {
                 
                 // 添加数据点
                 if (item['检测日期']) {
-                    groupedData[drillKey].dates.push(item['检测日期']);
-                    groupedData[drillKey].pressure.push(item['负压']);
-                    groupedData[drillKey].concentration.push(item['瓦斯浓度']);
-                    groupedData[drillKey].flow.push(item['混合流量']);
+                    groupedData[drillId].dates.push(item['检测日期']);
+                    groupedData[drillId].pressure.push(item['负压']);
+                    groupedData[drillId].concentration.push(item['瓦斯浓度']);
+                    groupedData[drillId].flow.push(item['混合流量']);
                     
                     // 设置初始值（第一次检测）
-                    if (!groupedData[drillKey].initialDate || item['检测日期'] < groupedData[drillKey].initialDate) {
-                        groupedData[drillKey].initialDate = item['检测日期'];
-                        groupedData[drillKey].initialConcentration = item['瓦斯浓度'];
-                        groupedData[drillKey].initialPressure = item['负压'];
+                    if (!groupedData[drillId].initialDate || item['检测日期'] < groupedData[drillId].initialDate) {
+                        groupedData[drillId].initialDate = item['检测日期'];
+                        groupedData[drillId].initialConcentration = item['瓦斯浓度'];
+                        groupedData[drillId].initialPressure = item['负压'];
                     }
                 }
             });
             
             // 按日期排序每个钻孔的数据
-            Object.keys(groupedData).forEach(drillKey => {
-                const drill = groupedData[drillKey];
+            Object.keys(groupedData).forEach(drillId => {
+                const drill = groupedData[drillId];
                 const dateIndices = drill.dates.map((date, index) => ({ date, index }));
                 dateIndices.sort((a, b) => a.date.localeCompare(b.date));
                 
@@ -1251,36 +1203,6 @@ async function loadData() {
             return groupedData;
         }
         
-        // 构建数据索引
-        function buildDataIndexes(drillData) {
-            singleDrillIndex = {};
-            groupDrillIndex = {};
-            
-            for (const drillKey in drillData) {
-                const drill = drillData[drillKey];
-                const area = drill['抽采区域'];
-                const type = drill['钻孔性质'];
-                const unit = drill['抽采单元'] || '';
-                const group = drill['抽采组数'] || '';
-                
-                // 单孔索引：用于单孔显示
-                const singleKey = `${area}|${type}|${unit}`;
-                if (!singleDrillIndex[singleKey]) {
-                    singleDrillIndex[singleKey] = [];
-                }
-                singleDrillIndex[singleKey].push(drillKey);
-                
-                // 组索引：用于组显示
-                if (group && group !== 'N/A') {
-                    const groupKey = `${area}|${type}|${group}`;
-                    if (!groupDrillIndex[groupKey]) {
-                        groupDrillIndex[groupKey] = [];
-                    }
-                    groupDrillIndex[groupKey].push(drillKey);
-                }
-            }
-        }
-        
         // 更新孔号/组选择框
         function updateDrillSelect() {
             const select = document.getElementById('drill-select');
@@ -1289,45 +1211,43 @@ async function loadData() {
             let options = [];
             
             if (displayMode === 'single') {
-                // 单孔显示：使用单孔索引
-                const key = `${currentArea}|${currentDrillType}|${currentUnit}`;
-                const drillKeys = singleDrillIndex[key] || [];
-                drillKeys.forEach(drillKey => {
-                    const drill = allDrillData[drillKey];
-                    options.push({
-                        value: drillKey,
-                        text: drill['钻孔编号']
-                    });
-                });
-                options.sort((a, b) => a.text.localeCompare(b.text));
-            } else {
-                // 组数显示：使用组索引
-                const groups = new Set();
-                const prefix = `${currentArea}|${currentDrillType}|`;
-                Object.keys(groupDrillIndex).forEach(fullKey => {
-                    if (fullKey.startsWith(prefix)) {
-                        const group = fullKey.split('|')[2];
-                        groups.add(group);
+                // 单孔显示：列出符合条件的钻孔编号
+                for (const drillId in allDrillData) {
+                    const drill = allDrillData[drillId];
+                    if (drill['抽采区域'] === currentArea && 
+                        drill['钻孔性质'] === currentDrillType &&
+                        (currentDrillType === '高位钻孔' || drill['抽采单元'] === currentUnit)) {
+                        options.push(drillId);
                     }
-                });
-                options = Array.from(groups).sort().map(group => ({
-                    value: group,
-                    text: group
-                }));
+                }
+                options.sort();
+            } else {
+                // 组数显示：列出符合条件的抽采组数
+                const groups = new Set();
+                for (const drillId in allDrillData) {
+                    const drill = allDrillData[drillId];
+                    if (drill['抽采区域'] === currentArea && 
+                        drill['钻孔性质'] === currentDrillType &&
+                        (currentDrillType === '高位钻孔' || drill['抽采单元'] === currentUnit) &&
+                        drill['抽采组数'] && drill['抽采组数'] !== 'N/A') {
+                        groups.add(drill['抽采组数']);
+                    }
+                }
+                options = Array.from(groups).sort();
             }
             
             // 填充下拉框
             options.forEach(option => {
                 const optElement = document.createElement('option');
-                optElement.value = option.value;
-                optElement.textContent = option.text;
+                optElement.value = option;
+                optElement.textContent = option;
                 select.appendChild(optElement);
             });
             
             // 默认选择第一个
             if (options.length > 0) {
-                select.value = options[0].value;
-                currentSelection = options[0].value;
+                select.value = options[0];
+                currentSelection = options[0];
             } else {
                 select.value = '';
                 currentSelection = '';
@@ -1346,12 +1266,13 @@ async function loadData() {
                     <option value="高位钻孔">高位钻孔</option>
                     <option value="顺层钻孔">顺层钻孔</option>
                 `;
+                unitGroup.classList.remove('disabled-control');
             }
         }
         
         // 根据钻孔类型更新单元控件状态
         function updateUnitControl() {
-            if (currentDrillType === '高位钻孔' || currentDrillType === '穿层钻孔') {
+            if (currentDrillType === '高位钻孔') {
                 unitGroup.classList.add('disabled-control');
             } else {
                 unitGroup.classList.remove('disabled-control');
@@ -1379,11 +1300,12 @@ async function loadData() {
             
             try {
                 // 加载CSV文件
-                const csvData = await loadData();
-        allDrillData = groupDataByDrill(csvData);
+                const response = await fetch(CSV_FILE_PATH);
+                if (!response.ok) throw new Error(`网络响应错误: ${response.status}`);
                 
-                // 构建数据索引
-                buildDataIndexes(allDrillData);
+                const csvText = await response.text();
+                const csvData = parseCSV(csvText);
+                allDrillData = groupDataByDrill(csvData);
                 
                 // 更新加载进度
                 loadingProgress.style.width = '40%';
@@ -1407,33 +1329,6 @@ async function loadData() {
                     updateUnitControl();
                     updateDisplayMode();
                     updateDrillSelect();
-                    
-                    // 根据钻孔类型设置默认日期范围
-                    if (currentDrillType === '顺层钻孔' || currentDrillType === '穿层钻孔') {
-                        startDateInput.value = getOneWeekAgoDate();
-                        endDateInput.value = getTodayDate();
-                    } else {
-                        startDateInput.value = '2025-05-01';
-                        endDateInput.value = getTodayDate();
-                    }
-
-                    // 动态生成高位钻孔孔号选项
-                    if (currentDrillType === '高位钻孔') {
-                        const holes = new Set();
-                        Object.values(allDrillData).forEach(drill => {
-                            if (drill['钻孔性质'] === '高位钻孔' && drill['抽采区域'] === currentArea) {
-                                holes.add(drill['钻孔编号']);
-                            }
-                        });
-                        const holeSelect = document.getElementById('holeNumberSelect');
-                        holeSelect.innerHTML = Array.from(holes).map(h => 
-                            `<option value="${h}">${h}</option>`
-                        ).join('');
-                        document.getElementById('holeNumberGroup').style.display = 'block';
-                    } else {
-                        document.getElementById('holeNumberGroup').style.display = 'none';
-                    }
-                    
                     updateStatus('钻孔类型已变更...', 'loading');
                 });
                 
@@ -1472,12 +1367,9 @@ async function loadData() {
                 updateDisplayMode();
                 updateDrillSelect();
                 
-                // 根据钻孔类型设置默认日期范围
-                const dates = Object.values(allDrillData).flatMap(drill => drill.dates);
-                const minDate = new Date(Math.min(...dates.map(date => new Date(date))));
-                const maxDate = new Date(Math.max(...dates.map(date => new Date(date))));
-                startDateInput.value = minDate.toISOString().split('T')[0];
-                endDateInput.value = maxDate.toISOString().split('T')[0];
+                // 设置默认日期范围
+                startDateInput.value = '2025-05-01';
+                endDateInput.value = getTodayDate();
                 
                 // 更新加载进度
                 loadingProgress.style.width = '80%';
@@ -1498,7 +1390,6 @@ async function loadData() {
                 
                 // 应用按钮事件监听
                 applyBtn.addEventListener('click', () => {
-                    showLoading();
                     updateStatus('处理数据中...', 'loading');
                     updateChartsAndTable();
                 });
@@ -1538,14 +1429,15 @@ async function loadData() {
                     dataToDisplay.push(allDrillData[currentSelection]);
                 }
             } else {
-                // 组数显示：使用组索引获取该组所有钻孔的数据
-                const key = `${currentArea}|${currentDrillType}|${currentSelection}`;
-                const drillKeys = groupDrillIndex[key] || [];
-                drillKeys.forEach(drillKey => {
-                    if (allDrillData[drillKey]) {
-                        dataToDisplay.push(allDrillData[drillKey]);
+                // 组数显示：获取该组所有钻孔的数据
+                for (const drillId in allDrillData) {
+                    const drill = allDrillData[drillId];
+                    if (drill['抽采组数'] === currentSelection && 
+                        drill['抽采区域'] === currentArea && 
+                        drill['钻孔性质'] === currentDrillType) {
+                        dataToDisplay.push(drill);
                     }
-                });
+                }
             }
             
             return dataToDisplay;
@@ -1575,20 +1467,20 @@ async function loadData() {
             const highConcentrationDrills = [];
             const today = latestDataDate || getTodayDate();
             
-            for (const drillKey in allDrillData) {
-                const drill = allDrillData[drillKey];
+            for (const drillId in allDrillData) {
+                const drill = allDrillData[drillId];
                 const lastIndex = drill.dates.length - 1;
                 
                 // 检查最后一个数据点是否是今天的
                 if (lastIndex >= 0 && drill.dates[lastIndex] === today && drill.concentration[lastIndex] > 30) {
                     highConcentrationDrills.push({
-                        drillId: drill['钻孔编号'],
+                        drillId,
                         concentration: drill.concentration[lastIndex],
                         date: drill.dates[lastIndex],
                         status: drill.concentration[lastIndex] > 85 ? '严重超标' : 
                                drill.concentration[lastIndex] > 60 ? '超标' : '较高',
                         area: drill['抽采区域'],
-                        unit: drill['抽采单元'] || drill['抽采组数'] || 'N/A'
+                        unit: drill['抽采单元'] || 'N/A'
                     });
                 }
             }
@@ -1718,7 +1610,6 @@ async function loadData() {
                     }
                 });
             } else {
-                // 显示无数据提示
                 ctx1.clearRect(0, 0, ctx1.canvas.width, ctx1.canvas.height);
                 ctx1.font = '14px Arial';
                 ctx1.fillStyle = '#a0d2ff';
@@ -1773,7 +1664,6 @@ async function loadData() {
                     }
                 });
             } else {
-                // 显示无数据提示
                 ctx2.clearRect(0, 0, ctx2.canvas.width, ctx2.canvas.height);
                 ctx2.font = '14px Arial';
                 ctx2.fillStyle = '#a0d2ff';
@@ -1796,13 +1686,7 @@ async function loadData() {
             
             // 更新所有钻孔编号显示
             document.querySelectorAll('.drill-id').forEach(el => {
-                if (displayMode === 'single' && dataToDisplay.length > 0) {
-                    el.textContent = dataToDisplay[0]['钻孔编号'];
-                } else if (displayMode === 'group') {
-                    el.textContent = currentSelection;
-                } else {
-                    el.textContent = 'N/A';
-                }
+                el.textContent = displayMode === 'single' ? currentSelection : currentSelection + '组';
             });
             
             // 使用setTimeout允许UI更新
@@ -1831,7 +1715,6 @@ async function loadData() {
                     tableLoadingOverlay.classList.remove('active');
                     alertLoadingOverlay.classList.remove('active');
                     updateStatus('系统就绪');
-                    hideLoading();
                 }, 300);
             }, 50);
         }
@@ -1907,10 +1790,10 @@ async function loadData() {
                         if (date >= startDate && date <= endDate) {
                             allData.push({
                                 date,
-                                drillId: drill['钻孔编号'],
-                                azimuth: drill['方位'],
-                                dip: drill['倾角'],
-                                depth: drill['孔深'],
+                                drillId: drill.钻孔编号,
+                                azimuth: drill.方位,
+                                dip: drill.倾角,
+                                depth: drill.孔深,
                                 initialDate: drill.initialDate,
                                 initialConcentration: drill.initialConcentration,
                                 initialPressure: drill.initialPressure,
@@ -2003,7 +1886,7 @@ async function loadData() {
             highConcentrationTableBody.appendChild(fragment);
         }
         
-        // 更新图表 - 支持虚线连接缺失数据点
+        // 更新图表
         function updateCharts(dataToDisplay, startDate, endDate) {
             const ctx1 = document.getElementById('pressure-chart').getContext('2d');
             const ctx2 = document.getElementById('concentration-chart').getContext('2d');
@@ -2020,18 +1903,8 @@ async function loadData() {
             const flowDatasets = [];
             
             const colors = ['#e74c3c', '#3498db', '#2ecc71', '#f1c40f', '#9b59b6', '#1abc9c'];
-            const drillIds = new Set(); // 用于跟踪已添加的钻孔ID
             
             dataToDisplay.forEach((drill, index) => {
-                // 检查是否已添加此钻孔的标识
-                const drillId = drill['钻孔编号'];
-                if (drillIds.has(drillId)) {
-                    // 如果已经添加过此钻孔，则不添加标签
-                    drillIds.add(drillId);
-                    return;
-                }
-                drillIds.add(drillId);
-                
                 // 过滤数据
                 const pressureData = filterDataByDateRange(
                     drill.dates, 
@@ -2078,15 +1951,11 @@ async function loadData() {
                         label: label
                     };
                     
-                    let lastNonNullIndex = -1;
-                    let hasSetLabel = false; // 标记是否已经设置过标签
+                    let previousValue = null;
                     
-                    // 处理数据点，创建分段数据集
-                    for (let i = 0; i < data.length; i++) {
-                        const value = data[i];
-                        
+                    data.forEach((value, i) => {
                         if (value === null) {
-                            // 如果当前值为空，结束当前线段（如果有数据）
+                            // 当遇到空值时，保存当前线段（如果有数据）
                             if (currentSegment.data.length > 0) {
                                 segments.push(currentSegment);
                                 currentSegment = {
@@ -2098,28 +1967,16 @@ async function loadData() {
                                     pointRadius: 0,
                                     tension: 0.2,
                                     fill: false,
-                                    label: '' // 不显示图例标签
+                                    label: '缺失数据'
                                 };
                             }
-                            
-                            // 如果前一个非空值存在，添加到虚线线段
-                            if (lastNonNullIndex >= 0) {
-                                currentSegment.data.push({
-                                    x: pressureData.dates[lastNonNullIndex],
-                                    y: data[lastNonNullIndex]
-                                });
-                            }
                         } else {
-                            // 当前值非空
-                            lastNonNullIndex = i;
-                            
-                            // 如果当前是虚线线段，且已有数据点，结束当前虚线线段
-                            if (currentSegment.borderDash && currentSegment.data.length > 0) {
-                                // 添加当前点作为虚线终点
-                                currentSegment.data.push({
-                                    x: pressureData.dates[i],
-                                    y: value
-                                });
+                            // 如果之前是空值，保存虚线线段
+                            if (currentSegment.borderDash) {
+                                if (previousValue !== null) {
+                                    // 添加插值点
+                                    currentSegment.data.push({x: pressureData.dates[i-1], y: previousValue});
+                                }
                                 segments.push(currentSegment);
                                 currentSegment = {
                                     data: [],
@@ -2131,26 +1988,15 @@ async function loadData() {
                                     pointBorderWidth: 1,
                                     tension: 0.2,
                                     fill: false,
-                                    label: hasSetLabel ? '' : label // 只设置一次标签
+                                    label: label
                                 };
-                                hasSetLabel = true;
-                            } else if (currentSegment.data.length === 0 && hasSetLabel) {
-                                // 如果是新的线段且标签已经设置过
-                                currentSegment.label = '';
                             }
                             
-                            // 添加当前点到当前线段
-                            currentSegment.data.push({
-                                x: pressureData.dates[i],
-                                y: value
-                            });
-                            
-                            // 如果是第一个点，标记标签已设置
-                            if (!hasSetLabel) {
-                                hasSetLabel = true;
-                            }
+                            // 添加当前点
+                            currentSegment.data.push({x: pressureData.dates[i], y: value});
+                            previousValue = value;
                         }
-                    }
+                    });
                     
                     // 添加最后一个线段
                     if (currentSegment.data.length > 0) {
@@ -2165,7 +2011,7 @@ async function loadData() {
                     ...createSegmentedDataset(
                         pressureData.data, 
                         colors[index % colors.length], 
-                        `${drill['钻孔编号']} 负压`
+                        `${drill.钻孔编号} 负压`
                     )
                 );
                 
@@ -2173,7 +2019,7 @@ async function loadData() {
                     ...createSegmentedDataset(
                         concentrationData.data, 
                         colors[index % colors.length], 
-                        `${drill['钻孔编号']} 浓度`
+                        `${drill.钻孔编号} 浓度`
                     )
                 );
                 
@@ -2181,7 +2027,7 @@ async function loadData() {
                     ...createSegmentedDataset(
                         flowData.data, 
                         colors[index % colors.length], 
-                        `${drill['钻孔编号']} 流量`
+                        `${drill.钻孔编号} 流量`
                     )
                 );
             });
@@ -2191,6 +2037,7 @@ async function loadData() {
                 pressureChart = new Chart(ctx1, {
                     type: 'line',
                     data: {
+                        labels: dataToDisplay[0].dates.filter(date => date >= startDate && date <= endDate),
                         datasets: pressureDatasets
                     },
                     options: {
@@ -2216,13 +2063,6 @@ async function loadData() {
                         },
                         scales: {
                             x: {
-                                type: 'time',
-                                time: {
-                                    tooltipFormat: 'YYYY-MM-DD',
-                                    displayFormats: {
-                                        day: 'YYYY-MM-DD'
-                                    }
-                                },
                                 grid: {
                                     display: false
                                 },
@@ -2261,6 +2101,7 @@ async function loadData() {
                 concentrationChart = new Chart(ctx2, {
                     type: 'line',
                     data: {
+                        labels: dataToDisplay[0].dates.filter(date => date >= startDate && date <= endDate),
                         datasets: concentrationDatasets
                     },
                     options: {
@@ -2324,13 +2165,6 @@ async function loadData() {
                         },
                         scales: {
                             x: {
-                                type: 'time',
-                                time: {
-                                    tooltipFormat: 'YYYY-MM-DD',
-                                    displayFormats: {
-                                        day: 'YYYY-MM-DD'
-                                    }
-                                },
                                 grid: {
                                     display: false
                                 },
@@ -2370,6 +2204,7 @@ async function loadData() {
                 flowChart = new Chart(ctx3, {
                     type: 'line',
                     data: {
+                        labels: dataToDisplay[0].dates.filter(date => date >= startDate && date <= endDate),
                         datasets: flowDatasets
                     },
                     options: {
@@ -2395,13 +2230,6 @@ async function loadData() {
                         },
                         scales: {
                             x: {
-                                type: 'time',
-                                time: {
-                                    tooltipFormat: 'YYYY-MM-DD',
-                                    displayFormats: {
-                                        day: 'YYYY-MM-DD'
-                                    }
-                                },
                                 grid: {
                                     display: false
                                 },
