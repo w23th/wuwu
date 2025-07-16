@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>营脚煤矿钻孔数据分析系统111</title>
+    <title>营脚煤矿钻孔数据分析系统222</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.1.0/dist/chartjs-plugin-annotation.min.js"></script>
@@ -1940,8 +1940,18 @@
             const flowDatasets = [];
             
             const colors = ['#e74c3c', '#3498db', '#2ecc71', '#f1c40f', '#9b59b6', '#1abc9c'];
+            const drillIds = new Set(); // 用于跟踪已添加的钻孔ID
             
             dataToDisplay.forEach((drill, index) => {
+                // 检查是否已添加此钻孔的标识
+                const drillId = drill['钻孔编号'];
+                if (drillIds.has(drillId)) {
+                    // 如果已经添加过此钻孔，则不添加标签
+                    drillIds.add(drillId);
+                    return;
+                }
+                drillIds.add(drillId);
+                
                 // 过滤数据
                 const pressureData = filterDataByDateRange(
                     drill.dates, 
