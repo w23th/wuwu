@@ -1414,7 +1414,7 @@
             
             try {
                 // 从GitHub加载CSV数据
-                const response = await fetch('https://raw.githubusercontent.com/your-username/your-repo/main/data.csv');
+                const response = await fetch('https://github.com/w23th/wuwu/blob/main/data.csv');
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 
                 const csvText = await response.text();
