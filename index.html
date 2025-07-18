@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>营脚煤矿钻孔数据分析系统222</title>
+    <title>营脚煤矿钻孔数据分析系统</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.1.0/dist/chartjs-plugin-annotation.min.js"></script>
@@ -1100,8 +1100,62 @@
         let currentUnit = '一单元';
         let currentSelection = ''; // 当前选择的孔号或组
         
-        // CSV文件路径
-        const CSV_FILE_PATH = 'data.csv';
+        // 模拟数据
+        const MOCK_DATA = `抽采区域,抽采单元,钻孔性质,钻孔编号,方位,倾角,孔深,检测日期,负压,瓦斯浓度,混合流量,抽采组数
+12802回风巷,一单元,高位钻孔,A-1,120,35,120,2025-05-01,4.8,85.5,0.215,一组
+12802回风巷,一单元,高位钻孔,A-1,120,35,120,2025-05-05,4.9,84.2,0.218,一组
+12802回风巷,一单元,高位钻孔,A-1,120,35,120,2025-05-10,5.1,82.7,0.221,一组
+12802回风巷,一单元,高位钻孔,A-1,120,35,120,2025-05-15,5.3,80.5,0.225,一组
+12802回风巷,一单元,高位钻孔,A-1,120,35,120,2025-05-20,5.2,78.3,0.222,一组
+12802回风巷,一单元,高位钻孔,A-1,120,35,120,2025-05-25,5.4,76.8,0.228,一组
+12802回风巷,一单元,高位钻孔,A-1,120,35,120,2025-05-30,5.5,74.5,0.230,一组
+12802回风巷,一单元,高位钻孔,A-1,120,35,120,2025-06-05,5.6,72.3,0.232,一组
+12802回风巷,一单元,高位钻孔,A-1,120,35,120,2025-06-10,5.7,70.2,0.235,一组
+12802回风巷,一单元,高位钻孔,A-1,120,35,120,2025-06-15,5.8,68.5,0.238,一组
+12802回风巷,一单元,高位钻孔,A-1,120,35,120,2025-06-20,5.9,66.8,0.240,一组
+12802回风巷,一单元,高位钻孔,A-1,120,35,120,2025-06-27,6.0,65.0,0.242,一组
+12802回风巷,二单元,高位钻孔,B-1,125,32,115,2025-05-01,4.5,82.3,0.205,二组
+12802回风巷,二单元,高位钻孔,B-1,125,32,115,2025-05-05,4.6,80.5,0.208,二组
+12802回风巷,二单元,高位钻孔,B-1,125,32,115,2025-05-10,4.7,78.7,0.210,二组
+12802回风巷,二单元,高位钻孔,B-1,125,32,115,2025-05-15,4.8,76.2,0.212,二组
+12802回风巷,二单元,高位钻孔,B-1,125,32,115,2025-05-20,4.9,74.5,0.215,二组
+12802回风巷,二单元,高位钻孔,B-1,125,32,115,2025-05-25,5.0,72.8,0.218,二组
+12802回风巷,二单元,高位钻孔,B-1,125,32,115,2025-05-30,5.1,70.5,0.220,二组
+12802回风巷,二单元,高位钻孔,B-1,125,32,115,2025-06-05,5.2,68.3,0.222,二组
+12802回风巷,二单元,高位钻孔,B-1,125,32,115,2025-06-10,5.3,66.2,0.225,二组
+12802回风巷,二单元,高位钻孔,B-1,125,32,115,2025-06-15,5.4,64.5,0.228,二组
+12802回风巷,二单元,高位钻孔,B-1,125,32,115,2025-06-20,5.5,62.8,0.230,二组
+12802回风巷,二单元,高位钻孔,B-1,125,32,115,2025-06-27,5.6,60.0,0.232,二组
+12802运输巷,一单元,顺层钻孔,C-1,90,15,95,2025-05-15,6.2,42.5,0.185,
+12802运输巷,一单元,顺层钻孔,C-1,90,15,95,2025-05-22,6.3,40.8,0.188,
+12802运输巷,一单元,顺层钻孔,C-1,90,15,95,2025-05-29,6.4,38.7,0.192,
+12802运输巷,一单元,顺层钻孔,C-1,90,15,95,2025-06-05,6.5,36.5,0.195,
+12802运输巷,一单元,顺层钻孔,C-1,90,15,95,2025-06-12,6.6,34.8,0.198,
+12802运输巷,一单元,顺层钻孔,C-1,90,15,95,2025-06-19,6.7,32.5,0.202,
+12802运输巷,一单元,顺层钻孔,C-1,90,15,95,2025-06-26,6.8,30.2,0.205,
+12802运输巷,二单元,顺层钻孔,D-1,85,12,100,2025-05-15,5.8,48.3,0.175,
+12802运输巷,二单元,顺层钻孔,D-1,85,12,100,2025-05-22,5.9,46.5,0.178,
+12802运输巷,二单元,顺层钻孔,D-1,85,12,100,2025-05-29,6.0,44.7,0.182,
+12802运输巷,二单元,顺层钻孔,D-1,85,12,100,2025-06-05,6.1,42.5,0.185,
+12802运输巷,二单元,顺层钻孔,D-1,85,12,100,2025-06-12,6.2,40.8,0.188,
+12802运输巷,二单元,顺层钻孔,D-1,85,12,100,2025-06-19,6.3,38.7,0.192,
+12802运输巷,二单元,顺层钻孔,D-1,85,12,100,2025-06-26,6.4,36.5,0.195,
+12803回风巷,二单元,穿层钻孔,E-1,110,25,105,2025-05-10,7.2,55.5,0.165,三组
+12803回风巷,二单元,穿层钻孔,E-1,110,25,105,2025-05-17,7.3,53.8,0.168,三组
+12803回风巷,二单元,穿层钻孔,E-1,110,25,105,2025-05-24,7.4,51.7,0.172,三组
+12803回风巷,二单元,穿层钻孔,E-1,110,25,105,2025-05-31,7.5,49.5,0.175,三组
+12803回风巷,二单元,穿层钻孔,E-1,110,25,105,2025-06-07,7.6,47.8,0.178,三组
+12803回风巷,二单元,穿层钻孔,E-1,110,25,105,2025-06-14,7.7,45.7,0.182,三组
+12803回风巷,二单元,穿层钻孔,E-1,110,25,105,2025-06-21,7.8,43.5,0.185,三组
+12803回风巷,二单元,穿层钻孔,E-1,110,25,105,2025-06-28,7.9,41.2,0.188,三组
+12803回风巷,一单元,穿层钻孔,F-1,105,28,110,2025-05-10,6.8,62.3,0.195,三组
+12803回风巷,一单元,穿层钻孔,F-1,105,28,110,2025-05-17,6.9,60.5,0.198,三组
+12803回风巷,一单元,穿层钻孔,F-1,105,28,110,2025-05-24,7.0,58.7,0.202,三组
+12803回风巷,一单元,穿层钻孔,F-1,105,28,110,2025-05-31,7.1,56.5,0.205,三组
+12803回风巷,一单元,穿层钻孔,F-1,105,28,110,2025-06-07,7.2,54.8,0.208,三组
+12803回风巷,一单元,穿层钻孔,F-1,105,28,110,2025-06-14,7.3,52.7,0.212,三组
+12803回风巷,一单元,穿层钻孔,F-1,105,28,110,2025-06-21,7.4,50.5,0.215,三组
+12803回风巷,一单元,穿层钻孔,F-1,105,28,110,2025-06-28,7.5,48.2,0.218,三组`;
         
         // 获取今天的日期（YYYY-MM-DD格式）
         function getTodayDate() {
@@ -1340,6 +1394,75 @@
             }
         }
         
+        // 设置钻孔日期范围
+        function setDrillDateRange() {
+            // 只有顺层钻孔或穿层钻孔才需要自动设置日期范围
+            if (currentDrillType !== '顺层钻孔' && currentDrillType !== '穿层钻孔') {
+                return;
+            }
+            
+            // 获取当前选择的数据
+            const dataToDisplay = getDataToDisplay();
+            
+            if (dataToDisplay.length === 0) {
+                return;
+            }
+            
+            let minDate = '9999-99-99';
+            let maxDate = '0000-00-00';
+            
+            if (displayMode === 'single' && currentDrillType === '顺层钻孔') {
+                // 顺层钻孔单孔显示：取该钻孔的始抽时间和最近检测时间
+                const drill = dataToDisplay[0];
+                if (drill.initialDate) {
+                    minDate = drill.initialDate;
+                }
+                if (drill.dates.length > 0) {
+                    maxDate = drill.dates[drill.dates.length - 1];
+                }
+            } else if (displayMode === 'group' && currentDrillType === '穿层钻孔') {
+                // 穿层钻孔组数显示：取该组所有钻孔的始抽时间最小值和最近检测时间最大值
+                dataToDisplay.forEach(drill => {
+                    // 更新最小日期（始抽时间）
+                    if (drill.initialDate && drill.initialDate < minDate) {
+                        minDate = drill.initialDate;
+                    }
+                    
+                    // 更新最大日期（最近检测时间）
+                    if (drill.dates.length > 0) {
+                        const lastDate = drill.dates[drill.dates.length - 1];
+                        if (lastDate > maxDate) {
+                            maxDate = lastDate;
+                        }
+                    }
+                });
+            }
+            
+            // 设置日期输入框的值
+            if (minDate !== '9999-99-99') {
+                startDateInput.value = minDate;
+            }
+            if (maxDate !== '0000-00-00') {
+                endDateInput.value = maxDate;
+            }
+        }
+        
+        // 获取组数显示的最佳X轴日期
+        function getBestXAxisDatesForGroup(dataToDisplay) {
+            let bestDrill = null;
+            let maxDataPoints = 0;
+            
+            // 查找数据点最多的钻孔
+            dataToDisplay.forEach(drill => {
+                if (drill.dates.length > maxDataPoints) {
+                    maxDataPoints = drill.dates.length;
+                    bestDrill = drill;
+                }
+            });
+            
+            return bestDrill ? bestDrill.dates : [];
+        }
+        
         // 初始化页面
         async function initializePage() {
             // 更新加载进度
@@ -1347,12 +1470,8 @@
             updateStatus('正在加载数据文件...', 'loading');
             
             try {
-                // 加载CSV文件
-                const response = await fetch(CSV_FILE_PATH);
-                if (!response.ok) throw new Error(`网络响应错误: ${response.status}`);
-                
-                const csvText = await response.text();
-                const csvData = parseCSV(csvText);
+                // 使用模拟数据
+                const csvData = parseCSV(MOCK_DATA);
                 allDrillData = groupDataByDrill(csvData);
                 
                 // 更新加载进度
@@ -1369,6 +1488,7 @@
                     updateDrillTypeOptions();
                     updateDisplayMode();
                     updateDrillSelect();
+                    setDrillDateRange();
                     updateStatus('区域已变更...', 'loading');
                 });
                 
@@ -1377,6 +1497,7 @@
                     updateUnitControl();
                     updateDisplayMode();
                     updateDrillSelect();
+                    setDrillDateRange();
                     
                     // 根据钻孔类型设置默认日期范围
                     if (currentDrillType === '顺层钻孔' || currentDrillType === '穿层钻孔') {
@@ -1393,11 +1514,13 @@
                 unitSelect.addEventListener('change', (e) => {
                     currentUnit = e.target.value;
                     updateDrillSelect();
+                    setDrillDateRange();
                     updateStatus('单元已变更...', 'loading');
                 });
                 
                 drillSelect.addEventListener('change', (e) => {
                     currentSelection = e.target.value;
+                    setDrillDateRange();
                     updateStatus('孔号/组已变更...', 'loading');
                 });
                 
@@ -1407,6 +1530,7 @@
                         singleDisplayBtn.classList.add('active');
                         groupDisplayBtn.classList.remove('active');
                         updateDrillSelect();
+                        setDrillDateRange();
                         updateStatus('显示模式已变更...', 'loading');
                     }
                 });
@@ -1416,6 +1540,7 @@
                     groupDisplayBtn.classList.add('active');
                     singleDisplayBtn.classList.remove('active');
                     updateDrillSelect();
+                    setDrillDateRange();
                     updateStatus('显示模式已变更...', 'loading');
                 });
                 
@@ -1424,6 +1549,7 @@
                 updateUnitControl();
                 updateDisplayMode();
                 updateDrillSelect();
+                setDrillDateRange();
                 
                 // 根据钻孔类型设置默认日期范围
                 if (currentDrillType === '顺层钻孔' || currentDrillType === '穿层钻孔') {
@@ -1470,7 +1596,7 @@
                         <h2 style="color:#e74c3c;">数据加载失败</h2>
                         <p style="color:#f0f0f0; max-width:500px; text-align:center;">
                             无法加载数据文件: ${error.message}<br>
-                            请确保data.csv文件存在且格式正确
+                            请确保数据文件存在且格式正确
                         </p>
                         <button id="retry-btn" class="btn-apply" style="margin-top:20px;">
                             <i class="fas fa-redo"></i> 重新加载
@@ -2077,6 +2203,19 @@
             const colors = ['#e74c3c', '#3498db', '#2ecc71', '#f1c40f', '#9b59b6', '#1abc9c'];
             const drillIds = new Set(); // 用于跟踪已添加的钻孔ID
             
+            // 确定X轴日期序列
+            let xAxisDates = [];
+            
+            if (displayMode === 'single' && dataToDisplay.length > 0) {
+                // 单孔显示：使用该钻孔的检测日期
+                const drill = dataToDisplay[0];
+                xAxisDates = drill.dates.filter(date => date >= startDate && date <= endDate);
+            } else if (displayMode === 'group' && dataToDisplay.length > 0) {
+                // 组数显示：使用检测日期最完整的钻孔的检测日期
+                xAxisDates = getBestXAxisDatesForGroup(dataToDisplay);
+                xAxisDates = xAxisDates.filter(date => date >= startDate && date <= endDate);
+            }
+            
             dataToDisplay.forEach((drill, index) => {
                 // 检查是否已添加此钻孔的标识
                 const drillId = drill['钻孔编号'];
@@ -2085,35 +2224,26 @@
                 }
                 drillIds.add(drillId);
                 
-                // 过滤数据
-                const pressureData = filterDataByDateRange(
-                    drill.dates, 
-                    drill.pressure, 
-                    startDate, 
-                    endDate
-                );
+                // 准备钻孔数据
+                const pressureData = [];
+                const concentrationData = [];
+                const flowData = [];
                 
-                const concentrationData = filterDataByDateRange(
-                    drill.dates, 
-                    drill.concentration, 
-                    startDate, 
-                    endDate
-                );
-                
-                const flowData = filterDataByDateRange(
-                    drill.dates, 
-                    drill.flow, 
-                    startDate, 
-                    endDate
-                );
-                
-                // 计算浓度图表y轴范围
-                const concentrationRange = concentrationData.data.length > 0 ? 
-                    calculateConcentrationYAxisRange(concentrationData.data) : 
-                    { min: 0, max: 5 };
-                
-                // 更新范围信息
-                concentrationRangeInfo.textContent = `Y轴范围: ${concentrationRange.min.toFixed(2)}% - ${concentrationRange.max.toFixed(2)}%`;
+                // 为每个X轴日期点填充数据
+                xAxisDates.forEach(date => {
+                    const indexInDrill = drill.dates.indexOf(date);
+                    
+                    // 如果钻孔有该日期的数据，使用实际值，否则用null
+                    if (indexInDrill !== -1) {
+                        pressureData.push(drill.pressure[indexInDrill]);
+                        concentrationData.push(drill.concentration[indexInDrill]);
+                        flowData.push(drill.flow[indexInDrill]);
+                    } else {
+                        pressureData.push(null);
+                        concentrationData.push(null);
+                        flowData.push(null);
+                    }
+                });
                 
                 // 创建虚线数据集
                 const createSegmentedDataset = (data, color, label) => {
@@ -2157,7 +2287,7 @@
                             // 如果前一个非空值存在，添加到虚线线段
                             if (lastNonNullIndex >= 0) {
                                 currentSegment.data.push({
-                                    x: pressureData.dates[lastNonNullIndex],
+                                    x: xAxisDates[lastNonNullIndex],
                                     y: data[lastNonNullIndex]
                                 });
                             }
@@ -2169,7 +2299,7 @@
                             if (currentSegment.borderDash && currentSegment.data.length > 0) {
                                 // 添加当前点作为虚线终点
                                 currentSegment.data.push({
-                                    x: pressureData.dates[i],
+                                    x: xAxisDates[i],
                                     y: value
                                 });
                                 segments.push(currentSegment);
@@ -2189,7 +2319,7 @@
                             
                             // 添加当前点到当前线段
                             currentSegment.data.push({
-                                x: pressureData.dates[i],
+                                x: xAxisDates[i],
                                 y: value
                             });
                         }
@@ -2206,7 +2336,7 @@
                 // 添加数据集
                 pressureDatasets.push(
                     ...createSegmentedDataset(
-                        pressureData.data, 
+                        pressureData, 
                         colors[index % colors.length], 
                         `${drill['钻孔编号']} 负压`
                     )
@@ -2214,7 +2344,7 @@
                 
                 concentrationDatasets.push(
                     ...createSegmentedDataset(
-                        concentrationData.data, 
+                        concentrationData, 
                         colors[index % colors.length], 
                         `${drill['钻孔编号']} 浓度`
                     )
@@ -2222,7 +2352,7 @@
                 
                 flowDatasets.push(
                     ...createSegmentedDataset(
-                        flowData.data, 
+                        flowData, 
                         colors[index % colors.length], 
                         `${drill['钻孔编号']} 流量`
                     )
@@ -2241,11 +2371,11 @@
             });
             
             // 创建新图表
-            if (pressureDatasets.length > 0) {
+            if (pressureDatasets.length > 0 && xAxisDates.length > 0) {
                 pressureChart = new Chart(ctx1, {
                     type: 'line',
                     data: {
-                        labels: dataToDisplay[0].dates.filter(date => date >= startDate && date <= endDate),
+                        labels: xAxisDates,
                         datasets: pressureDatasets
                     },
                     options: {
@@ -2303,7 +2433,7 @@
                 concentrationChart = new Chart(ctx2, {
                     type: 'line',
                     data: {
-                        labels: dataToDisplay[0].dates.filter(date => date >= startDate && date <= endDate),
+                        labels: xAxisDates,
                         datasets: concentrationDatasets
                     },
                     options: {
@@ -2400,7 +2530,7 @@
                 flowChart = new Chart(ctx3, {
                     type: 'line',
                     data: {
-                        labels: dataToDisplay[0].dates.filter(date => date >= startDate && date <= endDate),
+                        labels: xAxisDates,
                         datasets: flowDatasets
                     },
                     options: {
