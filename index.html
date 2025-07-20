@@ -3,11 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>营脚煤矿钻孔数据分析系统111</title>
+    <title>营脚煤矿钻孔数据分析系统</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.1.0/dist/chartjs-plugin-annotation.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
     <style>
         * {
             margin: 0;
@@ -2280,6 +2279,7 @@
                 pressureChart = new Chart(ctx1, {
                     type: 'line',
                     data: {
+                        labels: dataToDisplay[0].dates.filter(date => date >= startDate && date <= endDate),
                         datasets: pressureDatasets
                     },
                     options: {
@@ -2299,14 +2299,6 @@
                         },
                         scales: {
                             x: {
-                                type: 'time',
-                                time: {
-                                    unit: 'day',
-                                    tooltipFormat: 'YYYY-MM-DD',
-                                    displayFormats: {
-                                        day: 'YYYY-MM-DD'
-                                    }
-                                },
                                 grid: {
                                     display: false
                                 },
@@ -2345,6 +2337,7 @@
                 concentrationChart = new Chart(ctx2, {
                     type: 'line',
                     data: {
+                        labels: dataToDisplay[0].dates.filter(date => date >= startDate && date <= endDate),
                         datasets: concentrationDatasets
                     },
                     options: {
@@ -2402,14 +2395,6 @@
                         },
                         scales: {
                             x: {
-                                type: 'time',
-                                time: {
-                                    unit: 'day',
-                                    tooltipFormat: 'YYYY-MM-DD',
-                                    displayFormats: {
-                                        day: 'YYYY-MM-DD'
-                                    }
-                                },
                                 grid: {
                                     display: false
                                 },
@@ -2449,6 +2434,7 @@
                 flowChart = new Chart(ctx3, {
                     type: 'line',
                     data: {
+                        labels: dataToDisplay[0].dates.filter(date => date >= startDate && date <= endDate),
                         datasets: flowDatasets
                     },
                     options: {
@@ -2468,14 +2454,6 @@
                         },
                         scales: {
                             x: {
-                                type: 'time',
-                                time: {
-                                    unit: 'day',
-                                    tooltipFormat: 'YYYY-MM-DD',
-                                    displayFormats: {
-                                        day: 'YYYY-MM-DD'
-                                    }
-                                },
                                 grid: {
                                     display: false
                                 },
