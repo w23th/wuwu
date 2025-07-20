@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>营脚煤矿钻孔数据分析系统222</title>
+    <title>营脚煤矿钻孔数据分析系统</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.1.0/dist/chartjs-plugin-annotation.min.js"></script>
@@ -1297,6 +1297,9 @@
             if (options.length > 0) {
                 select.value = options[0].value;
                 currentSelection = options[0].value;
+                
+                // 更新日期范围
+                updateDateRange();
             } else {
                 select.value = '';
                 currentSelection = '';
@@ -1340,6 +1343,54 @@
             }
         }
         
+        // 更新日期范围
+        function updateDateRange() {
+            if (!currentSelection || Object.keys(allDrillData).length === 0) return;
+            
+            let minDate = null;
+            let maxDate = null;
+            
+            if (displayMode === 'single') {
+                // 单孔显示：获取该钻孔的最早和最晚日期
+                const drill = allDrillData[currentSelection];
+                if (drill && drill.dates.length > 0) {
+                    minDate = drill.dates[0];
+                    maxDate = drill.dates[drill.dates.length - 1];
+                }
+            } else {
+                // 组数显示：获取该组所有钻孔的最早和最晚日期
+                for (const drillKey in allDrillData) {
+                    const drill = allDrillData[drillKey];
+                    if (drill['抽采组数'] === currentSelection && 
+                        drill['抽采区域'] === currentArea && 
+                        drill['钻孔性质'] === currentDrillType) {
+                        
+                        // 找到该钻孔的最早和最晚日期
+                        const drillMinDate = drill.dates[0];
+                        const drillMaxDate = drill.dates[drill.dates.length - 1];
+                        
+                        if (drillMinDate && (!minDate || drillMinDate < minDate)) {
+                            minDate = drillMinDate;
+                        }
+                        
+                        if (drillMaxDate && (!maxDate || drillMaxDate > maxDate)) {
+                            maxDate = drillMaxDate;
+                        }
+                    }
+                }
+            }
+            
+            // 设置日期范围
+            if (minDate && maxDate) {
+                startDateInput.value = minDate;
+                endDateInput.value = maxDate;
+            } else {
+                // 如果找不到有效日期，使用默认范围
+                startDateInput.value = getOneWeekAgoDate();
+                endDateInput.value = getTodayDate();
+            }
+        }
+        
         // 初始化页面
         async function initializePage() {
             // 更新加载进度
@@ -1378,15 +1429,6 @@
                     updateDisplayMode();
                     updateDrillSelect();
                     
-                    // 根据钻孔类型设置默认日期范围
-                    if (currentDrillType === '顺层钻孔' || currentDrillType === '穿层钻孔') {
-                        startDateInput.value = getOneWeekAgoDate();
-                        endDateInput.value = getTodayDate();
-                    } else {
-                        startDateInput.value = '2025-05-01';
-                        endDateInput.value = getTodayDate();
-                    }
-                    
                     updateStatus('钻孔类型已变更...', 'loading');
                 });
                 
@@ -1398,6 +1440,7 @@
                 
                 drillSelect.addEventListener('change', (e) => {
                     currentSelection = e.target.value;
+                    updateDateRange(); // 钻孔变更时更新日期范围
                     updateStatus('孔号/组已变更...', 'loading');
                 });
                 
@@ -1424,15 +1467,6 @@
                 updateUnitControl();
                 updateDisplayMode();
                 updateDrillSelect();
-                
-                // 根据钻孔类型设置默认日期范围
-                if (currentDrillType === '顺层钻孔' || currentDrillType === '穿层钻孔') {
-                    startDateInput.value = getOneWeekAgoDate();
-                    endDateInput.value = getTodayDate();
-                } else {
-                    startDateInput.value = '2025-05-01';
-                    endDateInput.value = getTodayDate();
-                }
                 
                 // 更新加载进度
                 loadingProgress.style.width = '80%';
