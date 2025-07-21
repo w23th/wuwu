@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>营脚煤矿钻孔数据分析系统</title>
+    <title>营脚煤矿钻孔数据分析系统111</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.1.0/dist/chartjs-plugin-annotation.min.js"></script>
@@ -1343,7 +1343,7 @@
             }
         }
         
-        // 更新日期范围
+        // 更新日期范围 - 根据单孔或组数设置日期
         function updateDateRange() {
             if (!currentSelection || Object.keys(allDrillData).length === 0) return;
             
@@ -1366,15 +1366,17 @@
                         drill['钻孔性质'] === currentDrillType) {
                         
                         // 找到该钻孔的最早和最晚日期
-                        const drillMinDate = drill.dates[0];
-                        const drillMaxDate = drill.dates[drill.dates.length - 1];
-                        
-                        if (drillMinDate && (!minDate || drillMinDate < minDate)) {
-                            minDate = drillMinDate;
-                        }
-                        
-                        if (drillMaxDate && (!maxDate || drillMaxDate > maxDate)) {
-                            maxDate = drillMaxDate;
+                        if (drill.dates.length > 0) {
+                            const drillMinDate = drill.dates[0];
+                            const drillMaxDate = drill.dates[drill.dates.length - 1];
+                            
+                            if (drillMinDate && (!minDate || drillMinDate < minDate)) {
+                                minDate = drillMinDate;
+                            }
+                            
+                            if (drillMaxDate && (!maxDate || drillMaxDate > maxDate)) {
+                                maxDate = drillMaxDate;
+                            }
                         }
                     }
                 }
