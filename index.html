@@ -8,7 +8,770 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.1.0/dist/chartjs-plugin-annotation.min.js"></script>
     <style>
-        /* 样式保持不变 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0c1c29, #1e3c5a);
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 15px;
+            background-attachment: fixed;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1a2a3a, #203a52);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .header::before {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(52, 152, 219, 0.15) 0%, rgba(255,255,255,0) 70%);
+            transform: rotate(30deg);
+        }
+        
+        .header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 12px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            position: relative;
+            z-index: 2;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+        }
+        
+        .header p {
+            font-size: 1rem;
+            opacity: 0.9;
+            max-width: 1000px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 2;
+            line-height: 1.6;
+        }
+        
+        .card {
+            background: rgba(30, 45, 62, 0.85);
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+        }
+        
+        .card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(90deg, #3498db, #2ecc71, #e74c3c);
+        }
+        
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            background: rgba(35, 55, 75, 0.6);
+            padding: 12px;
+            border-radius: 12px;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .control-group label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #a0d2ff;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        select, input {
+            padding: 11px 15px;
+            border-radius: 10px;
+            border: 1px solid #3a5a77;
+            background-color: rgba(25, 40, 55, 0.8);
+            color: #f0f0f0;
+            font-size: 0.95rem;
+            width: 100%;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        
+        select:focus, input:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.4);
+        }
+        
+        .date-range {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .date-range input {
+            min-width: 140px;
+            flex: 1;
+        }
+        
+        .btn-apply, .btn-upload {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 11px 25px;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            height: 100%;
+        }
+        
+        .btn-apply:hover, .btn-upload:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(52, 152, 219, 0.7);
+            background: linear-gradient(135deg, #2980b9, #3498db);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+        }
+        
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .metric-box {
+            background: linear-gradient(135deg, #2c3e50, #1a2a3a);
+            color: white;
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .metric-box:nth-child(1) {
+            background: linear-gradient(135deg, #3498db, #1a5a8a);
+        }
+        
+        .metric-box:nth-child(2) {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+        }
+        
+        .metric-box:nth-child(3) {
+            background: linear-gradient(135deg, #9b59b6, #8e44ad);
+        }
+        
+        .metric-box:nth-child(4) {
+            background: linear-gradient(135deg, #f1c40f, #f39c12);
+        }
+        
+        .metric-box:nth-child(5) {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        }
+        
+        .metric-box:nth-child(6) {
+            background: linear-gradient(135deg, #1abc9c, #16a085);
+        }
+        
+        .metric-box:hover {
+            transform: scale(1.03);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+        
+        .metric-value {
+            font-size: 1.6rem;
+            font-weight: bold;
+            margin: 10px 0;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .metric-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        /* 新增样式 */
+        .metric-change {
+            font-size: 0.75rem;
+            opacity: 0.85;
+            margin-top: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+        
+        .metric-change.up {
+            color: #e74c3c;
+        }
+        
+        .metric-change.down {
+            color: #2ecc71;
+        }
+        
+        .metric-date {
+            font-size: 0.75rem;
+            opacity: 0.85;
+            margin-top: 5px;
+        }
+        
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 20px;
+        }
+        
+        .pie-charts-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .pie-chart-card {
+            background: rgba(30, 45, 62, 0.85);
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+        }
+        
+        .chart-title {
+            text-align: center;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: #a0d2ff;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .chart-container {
+            height: 300px;
+            position: relative;
+        }
+        
+        .pie-chart-container {
+            height: 250px;
+            position: relative;
+        }
+        
+        .data-table-container {
+            overflow-x: auto;
+            margin-top: 15px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 0;
+            min-width: 1000px;
+        }
+        
+        .data-table th {
+            background: linear-gradient(135deg, #2c3e50, #1a2a3a);
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            border-bottom: 2px solid #3498db;
+        }
+        
+        .data-table td {
+            padding: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            color: #e0e0e0;
+            font-size: 0.9rem;
+        }
+        
+        .data-table tr:nth-child(even) {
+            background-color: rgba(30, 45, 60, 0.5);
+        }
+        
+        .data-table tr:hover {
+            background-color: rgba(52, 152, 219, 0.15);
+        }
+        
+        .info-text {
+            background: linear-gradient(135deg, rgba(30, 50, 70, 0.8), rgba(25, 40, 55, 0.8));
+            padding: 18px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            color: #a0d2ff;
+            margin-top: 15px;
+            border-left: 5px solid #3498db;
+        }
+        
+        .info-text p {
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .info-text i {
+            min-width: 24px;
+            text-align: center;
+            color: #3498db;
+        }
+        
+        h3 {
+            color: #a0d2ff;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.3rem;
+        }
+        
+        .drill-id {
+            background: #3498db;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+        
+        .highlight-row {
+            background-color: rgba(231, 76, 60, 0.2) !important;
+        }
+        
+        .highlight-row:hover {
+            background-color: rgba(231, 76, 60, 0.3) !important;
+        }
+        
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background: rgba(20, 35, 50, 0.8);
+            border-radius: 10px;
+            margin-top: 15px;
+            font-size: 0.85rem;
+        }
+        
+        .last-updated {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #a0d2ff;
+        }
+        
+        .red-text {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        
+        .status-tag {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        
+        .status-normal {
+            background-color: rgba(46, 204, 113, 0.2);
+            color: #2ecc71;
+        }
+        
+        .status-warning {
+            background-color: rgba(241, 196, 15, 0.2);
+            color: #f1c40f;
+        }
+        
+        .status-danger {
+            background-color: rgba(231, 76, 60, 0.2);
+            color: #e74c3c;
+        }
+        
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(30, 45, 62, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            border-radius: 15px;
+            flex-direction: column;
+            gap: 20px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        
+        .loading-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+        
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255,255,255,0.1);
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .loading-text {
+            font-size: 1rem;
+            color: #a0d2ff;
+        }
+        
+        .footer {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.6);
+            padding: 12px;
+            font-size: 0.8rem;
+        }
+        
+        .chart-legend {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.8rem;
+        }
+        
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 4px;
+        }
+        
+        .legend-alert {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 4px;
+        }
+        
+        .annotation-label {
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            color: white;
+        }
+        
+        .system-status-indicator {
+            position: fixed;
+            top: 12px;
+            right: 12px;
+            padding: 6px 10px;
+            border-radius: 18px;
+            font-size: 0.8rem;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(25, 40, 55, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #2ecc71;
+        }
+        
+        .status-indicator.loading {
+            background-color: #f1c40f;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 0.5; }
+            50% { opacity: 1; }
+            100% { opacity: 0.5; }
+        }
+        
+        .system-loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(12, 28, 41, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            gap: 20px;
+        }
+        
+        .system-loading h2 {
+            color: #a0d2ff;
+            font-size: 1.6rem;
+            text-align: center;
+            padding: 0 15px;
+        }
+        
+        .system-loading .progress-bar {
+            width: 250px;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 15px;
+        }
+        
+        .system-loading .progress {
+            height: 100%;
+            background: linear-gradient(90deg, #3498db, #2ecc71);
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+        
+        .range-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: #a0d2ff;
+            margin-top: 5px;
+        }
+        
+        .system-status {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            background: rgba(30, 50, 70, 0.6);
+            border-radius: 18px;
+            font-size: 0.8rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .display-options {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .display-option {
+            background: rgba(25, 40, 55, 0.8);
+            border: 1px solid #3a5a77;
+            border-radius: 8px;
+            padding: 8px 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.9rem;
+        }
+        
+        .display-option.active {
+            background: #3498db;
+            border-color: #3498db;
+        }
+        
+        .disabled-control {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        
+        .chart-note {
+            font-size: 0.75rem;
+            color: #a0d2ff;
+            text-align: center;
+            margin-top: 5px;
+        }
+        
+        /* 响应式调整 */
+        @media (max-width: 1200px) {
+            .charts-grid, .pie-charts-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .controls {
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .header p {
+                font-size: 0.9rem;
+            }
+            
+            .chart-title {
+                font-size: 1.1rem;
+            }
+            
+            .chart-container, .pie-chart-container {
+                height: 250px;
+            }
+            
+            .date-range {
+                flex-direction: column;
+            }
+            
+            .date-range span {
+                display: none;
+            }
+            
+            .display-options {
+                flex-direction: column;
+            }
+            
+            .btn-apply {
+                width: 100%;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 1.3rem;
+            }
+            
+            .header p {
+                font-size: 0.85rem;
+            }
+            
+            .chart-title {
+                font-size: 1rem;
+            }
+            
+            .chart-container, .pie-chart-container {
+                height: 220px;
+            }
+            
+            .metric-value {
+                font-size: 1.4rem;
+            }
+            
+            .control-group label {
+                font-size: 0.9rem;
+            }
+        }
+        
+        /* 微信浏览器优化 */
+        @media (max-width: 600px) and (-webkit-min-device-pixel-ratio: 2) {
+            body {
+                -webkit-text-size-adjust: none;
+            }
+            
+            .control-group, .btn-apply {
+                font-size: 15px;
+            }
+            
+            select, input {
+                font-size: 15px;
+                height: 42px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -28,11 +791,1303 @@
     </div>
     
     <div class="container">
-        <!-- 页面内容保持不变 -->
+        <div class="header">
+            <h1>营脚煤矿钻孔数据分析系统</h1>
+            <p>选择抽采区域、钻孔性质和孔号/组，查看负压、瓦斯浓度和混合流量变化曲线</p>
+            <div class="system-status">
+                <div class="status-item">
+                    <i class="fas fa-database"></i>
+                    <span>数据更新: <span id="last-update">2025-06-27</span></span>
+                </div>
+                <div class="status-item">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span>浓度超30%钻孔: <span id="exceed-count">5</span></span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="controls">
+                <div class="control-group">
+                    <label for="area-select"><i class="fas fa-map-marked-alt"></i> 抽采区域</label>
+                    <select id="area-select">
+                        <option value="12802回风巷">12802回风巷</option>
+                        <option value="12802运输巷">12802运输巷</option>
+                        <option value="12803回风巷">12803回风巷</option>
+                    </select>
+                </div>
+                
+                <div class="control-group">
+                    <label for="drill-type"><i class="fas fa-hard-hat"></i> 钻孔性质</label>
+                    <select id="drill-type">
+                        <option value="高位钻孔">高位钻孔</option>
+                        <option value="顺层钻孔">顺层钻孔</option>
+                        <option value="穿层钻孔">穿层钻孔</option>
+                    </select>
+                </div>
+                
+                <div class="control-group" id="unit-group">
+                    <label for="unit-select"><i class="fas fa-layer-group"></i> 抽采单元</label>
+                    <select id="unit-select">
+                        <option value="一单元">一单元</option>
+                        <option value="二单元">二单元</option>
+                        <option value="三单元">三单元</option>
+                    </select>
+                </div>
+                
+                <div class="control-group">
+                    <label for="display-mode"><i class="fas fa-desktop"></i> 显示方式</label>
+                    <div class="display-options">
+                        <div class="display-option active" id="single-display">
+                            <i class="fas fa-circle"></i> 单孔显示
+                        </div>
+                        <div class="display-option" id="group-display">
+                            <i class="fas fa-object-group"></i> 组数显示
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label for="drill-select"><i class="fas fa-drafting-compass"></i> 选择孔号/组</label>
+                    <select id="drill-select">
+                        <!-- 动态填充 -->
+                    </select>
+                </div>
+                
+                <div class="control-group">
+                    <label for="start-date"><i class="far fa-calendar-alt"></i> 日期范围</label>
+                    <div class="date-range">
+                        <input type="date" id="start-date" value="2025-05-01">
+                        <span>至</span>
+                        <input type="date" id="end-date" value="2025-06-27">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <button id="apply-date" class="btn-apply">
+                        <i class="fas fa-sync-alt"></i> 应用筛选
+                    </button>
+                </div>
+            </div>
+            
+            <div class="summary">
+                <div class="metric-box">
+                    <div class="metric-label"><i class="fas fa-tachometer-alt"></i> 平均负压</div>
+                    <div class="metric-value" id="avg-pressure">5.32 KPa</div>
+                    <div class="metric-change" id="pressure-change"></div>
+                </div>
+                <div class="metric-box">
+                    <div class="metric-label"><i class="fas fa-wind"></i> 平均瓦斯浓度</div>
+                    <div class="metric-value" id="avg-concentration">42.5%</div>
+                    <div class="metric-change" id="concentration-change"></div>
+                </div>
+                <div class="metric-box">
+                    <div class="metric-label"><i class="fas fa-fan"></i> 平均混合流量</div>
+                    <div class="metric-value" id="avg-flow">0.218 m³/min</div>
+                    <div class="metric-change" id="flow-change"></div>
+                </div>
+                <div class="metric-box">
+                    <div class="metric-label"><i class="fas fa-hourglass-start"></i> 始抽浓度</div>
+                    <div class="metric-value" id="initial-concentration">90.5%</div>
+                    <div class="metric-date" id="initial-date"></div>
+                </div>
+                <div class="metric-box">
+                    <div class="metric-label"><i class="fas fa-arrow-up"></i> 历史最高浓度</div>
+                    <div class="metric-value" id="max-concentration">92.9%</div>
+                    <div class="metric-date" id="max-date"></div>
+                </div>
+                <div class="metric-box">
+                    <div class="metric-label"><i class="fas fa-arrow-down"></i> 历史最低浓度</div>
+                    <div class="metric-value" id="min-concentration">6.6%</div>
+                    <div class="metric-date" id="min-date"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="charts-grid">
+            <div class="card">
+                <div class="chart-title"><span class="drill-id">A-1</span> <i class="fas fa-tachometer-alt"></i> 负压变化曲线 (KPa)</div>
+                <div class="chart-container">
+                    <canvas id="pressure-chart"></canvas>
+                </div>
+                <div class="chart-legend" id="pressure-legend"></div>
+                <div class="chart-note">注：虚线表示数据缺失</div>
+            </div>
+            <div class="card">
+                <div class="chart-title"><span class="drill-id">A-1</span> <i class="fas fa-wind"></i> 瓦斯浓度变化曲线 (%)</div>
+                <div class="chart-container">
+                    <canvas id="concentration-chart"></canvas>
+                </div>
+                <div class="chart-legend" id="concentration-legend">
+                    <div class="legend-item">
+                        <div class="legend-alert" style="background: #f1c40f;"></div>
+                        <span>警戒线 (30%)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-alert" style="background: #e74c3c;"></div>
+                        <span>严重超标 (85%)</span>
+                    </div>
+                </div>
+                <div class="range-info" id="concentration-range-info">Y轴范围: 0% - 100%</div>
+                <div class="chart-note">注：虚线表示数据缺失</div>
+            </div>
+            <div class="card">
+                <div class="chart-title"><span class="drill-id">A-1</span> <i class="fas fa-fan"></i> 混合流量变化曲线 (m³/min)</div>
+                <div class="chart-container">
+                    <canvas id="flow-chart"></canvas>
+                </div>
+                <div class="chart-legend" id="flow-legend"></div>
+                <div class="chart-note">注：虚线表示数据缺失</div>
+            </div>
+        </div>
+        
+        <div class="pie-charts-container">
+            <div class="pie-chart-card">
+                <div class="chart-title"><i class="fas fa-chart-pie"></i> 高浓度钻孔倾角分布</div>
+                <div class="pie-chart-container">
+                    <canvas id="dip-pie-chart"></canvas>
+                </div>
+                <div class="chart-legend">
+                    <div class="legend-item">
+                        <i class="fas fa-info-circle"></i>
+                        <span>瓦斯浓度 ≥50% 的钻孔倾角分布比例</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="pie-chart-card">
+                <div class="chart-title"><i class="fas fa-chart-pie"></i> 高浓度钻孔占比</div>
+                <div class="pie-chart-container">
+                    <canvas id="concentration-pie-chart"></canvas>
+                </div>
+                <div class="chart-legend">
+                    <div class="legend-item">
+                        <i class="fas fa-info-circle"></i>
+                        <span>瓦斯浓度 ≥50% 的钻孔占比</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="loading-overlay" id="table-loading">
+                <div class="loading-spinner"></div>
+                <div class="loading-text">正在加载钻孔数据...</div>
+            </div>
+            <h3><i class="fas fa-table"></i> 钻孔详细数据 - <span class="drill-id">A-1</span></h3>
+            <div class="data-table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>检测日期</th>
+                            <th>钻孔编号</th>
+                            <th>方位 (°)</th>
+                            <th>倾角 (°)</th>
+                            <th>孔深 (m)</th>
+                            <th>始抽时间</th>
+                            <th>初始浓度 (%)</th>
+                            <th>初始负压 (KPa)</th>
+                            <th>负压 (KPa)</th>
+                            <th>瓦斯浓度 (%)</th>
+                            <th>混合流量 (m³/min)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="data-table-body">
+                        <!-- 动态填充 -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="loading-overlay" id="alert-loading">
+                <div class="loading-spinner"></div>
+                <div class="loading-text">正在加载高浓度钻孔数据...</div>
+            </div>
+            <h3><i class="fas fa-exclamation-triangle"></i> 今日瓦斯浓度超过30%的钻孔</h3>
+            <div class="data-table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>钻孔编号</th>
+                            <th>瓦斯浓度 (%)</th>
+                            <th>检测日期</th>
+                            <th>状态</th>
+                            <th>抽采区域</th>
+                            <th>单元</th>
+                        </tr>
+                    </thead>
+                    <tbody id="high-concentration-table-body">
+                        <!-- 动态填充 -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="info-text">
+            <strong><i class="fas fa-info-circle"></i> 使用说明：</strong>
+            <p><i class="fas fa-check"></i> 选择抽采区域、钻孔性质和显示方式后，在"选择孔号/组"中选择要分析的钻孔或组</p>
+            <p><i class="fas fa-check"></i> 顺层钻孔仅支持单孔显示，高位钻孔支持单孔和组数显示</p>
+            <p><i class="fas fa-check"></i> 日期范围默认为所选钻孔或组的最早检测日期和当天日期</p>
+            <p><i class="fas fa-check"></i> 点击"应用筛选"按钮更新图表和表格数据</p>
+            <p><i class="fas fa-check"></i> 图表显示选定钻孔或组的负压、浓度和流量变化曲线</p>
+            <p><i class="fas fa-check"></i> 今日瓦斯浓度超过30%的钻孔编号已标红显示</p>
+            <p><i class="fas fa-check"></i> 虚线表示数据缺失点，用于显示趋势</p>
+            <p><i class="fas fa-check"></i> 顺层钻孔与穿层钻孔检测周期为一周，高位钻孔为每日检测</p>
+            <p><i class="fas fa-check"></i> 新增功能：指标卡显示历史极值日期和最近变化趋势</p>
+        </div>
+        
+        <div class="footer">
+            <p><i class="fas fa-copyright"></i> 营脚煤矿通防科 | 数据更新: <span id="last-update-footer">2025-06-27</span></p>
+        </div>
     </div>
 
     <script>
-        // ... 前面的代码保持不变 ...
+        // 获取DOM元素
+        const areaSelect = document.getElementById('area-select');
+        const drillTypeSelect = document.getElementById('drill-type');
+        const unitSelect = document.getElementById('unit-select');
+        const unitGroup = document.getElementById('unit-group');
+        const drillSelect = document.getElementById('drill-select');
+        const startDateInput = document.getElementById('start-date');
+        const endDateInput = document.getElementById('end-date');
+        const applyBtn = document.getElementById('apply-date');
+        const dataTableBody = document.getElementById('data-table-body');
+        const highConcentrationTableBody = document.getElementById('high-concentration-table-body');
+        const lastUpdateElement = document.getElementById('last-update');
+        const lastUpdateFooter = document.getElementById('last-update-footer');
+        const exceedCountElement = document.getElementById('exceed-count');
+        const tableLoadingOverlay = document.getElementById('table-loading');
+        const alertLoadingOverlay = document.getElementById('alert-loading');
+        const concentrationRangeInfo = document.getElementById('concentration-range-info');
+        const statusIndicator = document.getElementById('status-indicator');
+        const statusText = document.getElementById('status-text');
+        const statusIcon = document.getElementById('status-indicator-icon');
+        const systemLoading = document.getElementById('system-loading');
+        const loadingProgress = document.getElementById('loading-progress');
+        const singleDisplayBtn = document.getElementById('single-display');
+        const groupDisplayBtn = document.getElementById('group-display');
+        const pressureLegend = document.getElementById('pressure-legend');
+        const concentrationLegend = document.getElementById('concentration-legend');
+        const flowLegend = document.getElementById('flow-legend');
+        
+        // 指标卡元素
+        const avgPressureElement = document.getElementById('avg-pressure');
+        const avgConcentrationElement = document.getElementById('avg-concentration');
+        const avgFlowElement = document.getElementById('avg-flow');
+        const initialConcentrationElement = document.getElementById('initial-concentration');
+        const maxConcentrationElement = document.getElementById('max-concentration');
+        const minConcentrationElement = document.getElementById('min-concentration');
+        
+        // 新增指标卡元素
+        const pressureChangeElement = document.getElementById('pressure-change');
+        const concentrationChangeElement = document.getElementById('concentration-change');
+        const flowChangeElement = document.getElementById('flow-change');
+        const initialDateElement = document.getElementById('initial-date');
+        const maxDateElement = document.getElementById('max-date');
+        const minDateElement = document.getElementById('min-date');
+        
+        // 图表实例
+        let pressureChart, concentrationChart, flowChart, dipPieChart, concentrationPieChart;
+        
+        // 存储所有钻孔数据
+        let allDrillData = [];
+        let filteredDrillData = [];
+        let latestDataDate = '';
+        let displayMode = 'single'; // 'single' 或 'group'
+        let currentArea = '12802回风巷';
+        let currentDrillType = '高位钻孔';
+        let currentUnit = '一单元';
+        let currentSelection = ''; // 当前选择的孔号或组
+        
+        // CSV文件路径
+        const CSV_FILE_PATH = 'data.csv';
+        
+        // 获取今天的日期（YYYY-MM-DD格式）
+        function getTodayDate() {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+        
+        // 获取一周前的日期
+        function getOneWeekAgoDate() {
+            const today = new Date();
+            const oneWeekAgo = new Date(today);
+            oneWeekAgo.setDate(today.getDate() - 7);
+            const year = oneWeekAgo.getFullYear();
+            const month = String(oneWeekAgo.getMonth() + 1).padStart(2, '0');
+            const day = String(oneWeekAgo.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+        
+        // 更新系统状态
+        function updateStatus(text, type = 'ready') {
+            statusText.textContent = text;
+            
+            if (type === 'loading') {
+                statusIcon.classList.add('loading');
+                statusIcon.style.backgroundColor = '#f1c40f';
+            } else if (type === 'error') {
+                statusIcon.classList.remove('loading');
+                statusIcon.style.backgroundColor = '#e74c3c';
+            } else {
+                statusIcon.classList.remove('loading');
+                statusIcon.style.backgroundColor = '#2ecc71';
+            }
+        }
+        
+        // 解析CSV数据
+        function parseCSV(csvText) {
+            const lines = csvText.split('\n').filter(line => line.trim() !== '');
+            const headers = lines[0].split(',').map(header => header.trim());
+            
+            const data = [];
+            for (let i = 1; i < lines.length; i++) {
+                const values = lines[i].split(',');
+                const entry = {};
+                
+                for (let j = 0; j < headers.length; j++) {
+                    let value = values[j] ? values[j].trim() : '';
+                    
+                    // 转换数值类型
+                    if (['负压', '瓦斯浓度', '混合流量', '方位', '倾角', '孔深'].includes(headers[j])) {
+                        value = value === '' ? null : parseFloat(value);
+                    }
+                    
+                    // 标准化日期格式
+                    if (headers[j] === '检测日期' && value) {
+                        const dateParts = value.split('/');
+                        if (dateParts.length === 3) {
+                            const year = dateParts[0];
+                            const month = dateParts[1].padStart(2, '0');
+                            const day = dateParts[2].padStart(2, '0');
+                            value = `${year}-${month}-${day}`;
+                        }
+                    }
+                    
+                    entry[headers[j]] = value;
+                }
+                
+                // 添加抽采组数默认值
+                if (!entry['抽采组数'] || entry['抽采组数'] === '') {
+                    entry['抽采组数'] = 'N/A';
+                }
+                
+                data.push(entry);
+            }
+            
+            return data;
+        }
+        
+        // 将CSV数据转换为按钻孔分组的数据结构
+        function groupDataByDrill(csvData) {
+            const groupedData = {};
+            
+            // 找到最新数据日期
+            const dates = csvData.map(item => item['检测日期']).filter(d => d);
+            latestDataDate = dates.length > 0 ? dates.reduce((a, b) => a > b ? a : b) : getTodayDate();
+            
+            // 按钻孔唯一标识分组
+            csvData.forEach(item => {
+                // 创建唯一键：区域 + 单元/组数 + 钻孔编号
+                const unitGroupKey = item['抽采单元'] || item['抽采组数'] || '';
+                const drillKey = `${item['抽采区域']}|${unitGroupKey}|${item['钻孔编号']}`;
+                
+                if (!groupedData[drillKey]) {
+                    groupedData[drillKey] = {
+                        '抽采区域': item['抽采区域'],
+                        '抽采单元': item['抽采单元'] || '',
+                        '钻孔性质': item['钻孔性质'],
+                        '抽采组数': item['抽采组数'] || '',
+                        '钻孔编号': item['钻孔编号'],
+                        '方位': item['方位'],
+                        '倾角': item['倾角'],
+                        '孔深': item['孔深'],
+                        '初始日期': null,
+                        '初始浓度': null,
+                        '初始负压': null,
+                        dates: [],
+                        pressure: [],
+                        concentration: [],
+                        flow: []
+                    };
+                }
+                
+                // 添加数据点
+                if (item['检测日期']) {
+                    groupedData[drillKey].dates.push(item['检测日期']);
+                    groupedData[drillKey].pressure.push(item['负压']);
+                    groupedData[drillKey].concentration.push(item['瓦斯浓度']);
+                    groupedData[drillKey].flow.push(item['混合流量']);
+                    
+                    // 设置初始值（第一次检测）
+                    if (!groupedData[drillKey].initialDate || item['检测日期'] < groupedData[drillKey].initialDate) {
+                        groupedData[drillKey].initialDate = item['检测日期'];
+                        groupedData[drillKey].initialConcentration = item['瓦斯浓度'];
+                        groupedData[drillKey].initialPressure = item['负压'];
+                    }
+                }
+            });
+            
+            // 按日期排序每个钻孔的数据
+            Object.keys(groupedData).forEach(drillKey => {
+                const drill = groupedData[drillKey];
+                const dateIndices = drill.dates.map((date, index) => ({ date, index }));
+                dateIndices.sort((a, b) => a.date.localeCompare(b.date));
+                
+                drill.dates = dateIndices.map(di => di.date);
+                drill.pressure = dateIndices.map(di => drill.pressure[di.index]);
+                drill.concentration = dateIndices.map(di => drill.concentration[di.index]);
+                drill.flow = dateIndices.map(di => drill.flow[di.index]);
+            });
+            
+            return groupedData;
+        }
+        
+        // 更新孔号/组选择框
+        function updateDrillSelect() {
+            const select = document.getElementById('drill-select');
+            select.innerHTML = '';
+            
+            let options = [];
+            
+            if (displayMode === 'single') {
+                // 单孔显示：列出符合条件的钻孔
+                for (const drillKey in allDrillData) {
+                    const drill = allDrillData[drillKey];
+                    if (drill['抽采区域'] === currentArea && 
+                        drill['钻孔性质'] === currentDrillType &&
+                        (currentDrillType === '高位钻孔' || drill['抽采单元'] === currentUnit)) {
+                        options.push({
+                            value: drillKey,
+                            text: drill['钻孔编号']
+                        });
+                    }
+                }
+                options.sort((a, b) => a.text.localeCompare(b.text));
+            } else {
+                // 组数显示：列出符合条件的抽采组数
+                const groups = new Set();
+                for (const drillKey in allDrillData) {
+                    const drill = allDrillData[drillKey];
+                    if (drill['抽采区域'] === currentArea && 
+                        drill['钻孔性质'] === currentDrillType &&
+                        drill['抽采组数'] && drill['抽采组数'] !== 'N/A') {
+                        groups.add(drill['抽采组数']);
+                    }
+                }
+                options = Array.from(groups).sort().map(group => ({
+                    value: group,
+                    text: group
+                }));
+            }
+            
+            // 填充下拉框
+            options.forEach(option => {
+                const optElement = document.createElement('option');
+                optElement.value = option.value;
+                optElement.textContent = option.text;
+                select.appendChild(optElement);
+            });
+            
+            // 默认选择第一个
+            if (options.length > 0) {
+                select.value = options[0].value;
+                currentSelection = options[0].value;
+                
+                // 更新日期范围
+                updateDateRange();
+            } else {
+                select.value = '';
+                currentSelection = '';
+            }
+        }
+        
+        // 根据区域更新钻孔类型选项
+        function updateDrillTypeOptions() {
+            if (currentArea === '12803回风巷') {
+                drillTypeSelect.innerHTML = '<option value="穿层钻孔">穿层钻孔</option>';
+                drillTypeSelect.value = '穿层钻孔';
+                currentDrillType = '穿层钻孔';
+                unitGroup.classList.remove('disabled-control');
+            } else {
+                drillTypeSelect.innerHTML = `
+                    <option value="高位钻孔">高位钻孔</option>
+                    <option value="顺层钻孔">顺层钻孔</option>
+                `;
+            }
+        }
+        
+        // 根据钻孔类型更新单元控件状态
+        function updateUnitControl() {
+            if (currentDrillType === '高位钻孔' || currentDrillType === '穿层钻孔') {
+                unitGroup.classList.add('disabled-control');
+            } else {
+                unitGroup.classList.remove('disabled-control');
+            }
+        }
+        
+        // 更新显示模式
+        function updateDisplayMode() {
+            if (currentDrillType === '顺层钻孔') {
+                // 顺层钻孔只能单孔显示
+                displayMode = 'single';
+                singleDisplayBtn.classList.add('active');
+                groupDisplayBtn.classList.remove('active');
+                groupDisplayBtn.classList.add('disabled-control');
+            } else {
+                groupDisplayBtn.classList.remove('disabled-control');
+            }
+        }
+        
+        // 更新日期范围 - 根据单孔或组数设置日期
+        function updateDateRange() {
+            if (!currentSelection || Object.keys(allDrillData).length === 0) return;
+            
+            let minDate = null;
+            let maxDate = null;
+            
+            if (displayMode === 'single') {
+                // 单孔显示：获取该钻孔的最早和最晚日期
+                const drill = allDrillData[currentSelection];
+                if (drill && drill.dates.length > 0) {
+                    minDate = drill.dates[0];
+                    maxDate = drill.dates[drill.dates.length - 1];
+                }
+            } else {
+                // 组数显示：获取该组所有钻孔的最早和最晚日期
+                for (const drillKey in allDrillData) {
+                    const drill = allDrillData[drillKey];
+                    if (drill['抽采组数'] === currentSelection && 
+                        drill['抽采区域'] === currentArea && 
+                        drill['钻孔性质'] === currentDrillType) {
+                        
+                        // 找到该钻孔的最早和最晚日期
+                        if (drill.dates.length > 0) {
+                            const drillMinDate = drill.dates[0];
+                            const drillMaxDate = drill.dates[drill.dates.length - 1];
+                            
+                            if (drillMinDate && (!minDate || drillMinDate < minDate)) {
+                                minDate = drillMinDate;
+                            }
+                            
+                            if (drillMaxDate && (!maxDate || drillMaxDate > maxDate)) {
+                                maxDate = drillMaxDate;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // 设置日期范围
+            if (minDate && maxDate) {
+                startDateInput.value = minDate;
+                endDateInput.value = maxDate;
+            } else {
+                // 如果找不到有效日期，使用默认范围
+                startDateInput.value = getOneWeekAgoDate();
+                endDateInput.value = getTodayDate();
+            }
+        }
+        
+        // 初始化页面
+        async function initializePage() {
+            // 更新加载进度
+            loadingProgress.style.width = '20%';
+            updateStatus('正在加载数据文件...', 'loading');
+            
+            try {
+                // 加载CSV文件
+                const response = await fetch(CSV_FILE_PATH);
+                if (!response.ok) throw new Error(`网络响应错误: ${response.status}`);
+                
+                const csvText = await response.text();
+                const csvData = parseCSV(csvText);
+                allDrillData = groupDataByDrill(csvData);
+                
+                // 更新加载进度
+                loadingProgress.style.width = '40%';
+                updateStatus('正在解析数据...', 'loading');
+                
+                // 设置最后更新日期
+                lastUpdateElement.textContent = latestDataDate;
+                lastUpdateFooter.textContent = latestDataDate;
+                
+                // 设置事件监听
+                areaSelect.addEventListener('change', (e) => {
+                    currentArea = e.target.value;
+                    updateDrillTypeOptions();
+                    updateDisplayMode();
+                    updateDrillSelect();
+                    updateStatus('区域已变更...', 'loading');
+                });
+                
+                drillTypeSelect.addEventListener('change', (e) => {
+                    currentDrillType = e.target.value;
+                    updateUnitControl();
+                    updateDisplayMode();
+                    updateDrillSelect();
+                    
+                    updateStatus('钻孔类型已变更...', 'loading');
+                });
+                
+                unitSelect.addEventListener('change', (e) => {
+                    currentUnit = e.target.value;
+                    updateDrillSelect();
+                    updateStatus('单元已变更...', 'loading');
+                });
+                
+                drillSelect.addEventListener('change', (e) => {
+                    currentSelection = e.target.value;
+                    updateDateRange(); // 钻孔变更时更新日期范围
+                    updateStatus('孔号/组已变更...', 'loading');
+                });
+                
+                singleDisplayBtn.addEventListener('click', () => {
+                    if (currentDrillType !== '顺层钻孔') {
+                        displayMode = 'single';
+                        singleDisplayBtn.classList.add('active');
+                        groupDisplayBtn.classList.remove('active');
+                        updateDrillSelect();
+                        updateStatus('显示模式已变更...', 'loading');
+                    }
+                });
+                
+                groupDisplayBtn.addEventListener('click', () => {
+                    displayMode = 'group';
+                    groupDisplayBtn.classList.add('active');
+                    singleDisplayBtn.classList.remove('active');
+                    updateDrillSelect();
+                    updateStatus('显示模式已变更...', 'loading');
+                });
+                
+                // 初始设置
+                updateDrillTypeOptions();
+                updateUnitControl();
+                updateDisplayMode();
+                updateDrillSelect();
+                
+                // 更新加载进度
+                loadingProgress.style.width = '80%';
+                
+                // 初始化图表
+                updateChartsAndTable();
+                
+                // 更新加载进度
+                setTimeout(() => {
+                    loadingProgress.style.width = '100%';
+                    
+                    // 隐藏加载界面
+                    setTimeout(() => {
+                        systemLoading.style.display = 'none';
+                        updateStatus('系统就绪');
+                    }, 500);
+                }, 300);
+                
+                // 应用按钮事件监听
+                applyBtn.addEventListener('click', () => {
+                    updateStatus('处理数据中...', 'loading');
+                    updateChartsAndTable();
+                });
+                
+            } catch (error) {
+                console.error('数据加载失败:', error);
+                updateStatus('数据加载失败', 'error');
+                
+                // 更新加载进度
+                loadingProgress.style.width = '100%';
+                
+                // 显示错误信息
+                setTimeout(() => {
+                    systemLoading.innerHTML = `
+                        <h2 style="color:#e74c3c;">数据加载失败</h2>
+                        <p style="color:#f0f0f0; max-width:500px; text-align:center;">
+                            无法加载数据文件: ${error.message}<br>
+                            请确保data.csv文件存在且格式正确
+                        </p>
+                        <button id="retry-btn" class="btn-apply" style="margin-top:20px;">
+                            <i class="fas fa-redo"></i> 重新加载
+                        </button>
+                    `;
+                    
+                    document.getElementById('retry-btn').addEventListener('click', initializePage);
+                }, 500);
+            }
+        }
+        
+        // 获取要显示的数据
+        function getDataToDisplay() {
+            const dataToDisplay = [];
+            
+            if (displayMode === 'single') {
+                // 单孔显示：直接取该钻孔的数据
+                if (allDrillData[currentSelection]) {
+                    dataToDisplay.push(allDrillData[currentSelection]);
+                }
+            } else {
+                // 组数显示：获取该组所有钻孔的数据
+                for (const drillKey in allDrillData) {
+                    const drill = allDrillData[drillKey];
+                    if (drill['抽采组数'] === currentSelection && 
+                        drill['抽采区域'] === currentArea && 
+                        drill['钻孔性质'] === currentDrillType) {
+                        dataToDisplay.push(drill);
+                    }
+                }
+            }
+            
+            return dataToDisplay;
+        }
+        
+        // 过滤数据函数
+        function filterDataByDateRange(dates, data, startDate, endDate) {
+            const filteredDates = [];
+            const filteredData = [];
+            
+            for (let i = 0; i < dates.length; i++) {
+                const dateStr = dates[i];
+                if (dateStr >= startDate && dateStr <= endDate) {
+                    filteredDates.push(dateStr);
+                    filteredData.push(data[i]);
+                }
+            }
+            
+            return { 
+                dates: filteredDates, 
+                data: filteredData
+            };
+        }
+        
+        // 获取今日高浓度钻孔数据
+        function getTodayHighConcentrationDrills() {
+            const highConcentrationDrills = [];
+            const today = latestDataDate || getTodayDate();
+            
+            for (const drillKey in allDrillData) {
+                const drill = allDrillData[drillKey];
+                const lastIndex = drill.dates.length - 1;
+                
+                // 检查最后一个数据点是否是今天的
+                if (lastIndex >= 0 && drill.dates[lastIndex] === today && drill.concentration[lastIndex] > 30) {
+                    highConcentrationDrills.push({
+                        drillId: drill['钻孔编号'],
+                        concentration: drill.concentration[lastIndex],
+                        date: drill.dates[lastIndex],
+                        status: drill.concentration[lastIndex] > 85 ? '严重超标' : 
+                               drill.concentration[lastIndex] > 60 ? '超标' : '较高',
+                        area: drill['抽采区域'],
+                        unit: drill['抽采单元'] || drill['抽采组数'] || 'N/A'
+                    });
+                }
+            }
+            
+            // 按浓度从高到低排序
+            highConcentrationDrills.sort((a, b) => b.concentration - a.concentration);
+            return highConcentrationDrills;
+        }
+        
+        // 计算浓度图表y轴范围
+        function calculateConcentrationYAxisRange(concentrations) {
+            if (concentrations.length === 0 || concentrations.every(c => c === null)) {
+                return { min: 0, max: 5 };
+            }
+            
+            // 过滤掉null值
+            const validConcentrations = concentrations.filter(c => c !== null);
+            
+            if (validConcentrations.length === 0) {
+                return { min: 0, max: 5 };
+            }
+            
+            const maxValue = Math.max(...validConcentrations);
+            const minValue = Math.min(...validConcentrations);
+            
+            // 计算合理的y轴范围
+            let minY, maxY;
+            
+            if (maxValue < 10) {
+                minY = Math.max(0, minValue * 0.8);
+                maxY = Math.max(maxValue * 1.2, 5);
+            } else if (maxValue < 30) {
+                minY = 0;
+                maxY = 30;
+            } else if (maxValue < 85) {
+                minY = 0;
+                maxY = 85;
+            } else {
+                minY = 0;
+                maxY = 100;
+            }
+            
+            minY = Math.max(minY, 0);
+            
+            return { min: minY, max: maxY };
+        }
+        
+        // 更新饼图
+        function updatePieCharts(dataToDisplay) {
+            const ctx1 = document.getElementById('dip-pie-chart').getContext('2d');
+            const ctx2 = document.getElementById('concentration-pie-chart').getContext('2d');
+            
+            // 销毁旧图表
+            if (dipPieChart) dipPieChart.destroy();
+            if (concentrationPieChart) concentrationPieChart.destroy();
+            
+            // 准备饼图数据
+            const dipData = {};
+            let totalDrills = 0;
+            let highConcentrationDrills = 0;
+            
+            // 遍历所有显示的数据
+            dataToDisplay.forEach(drill => {
+                totalDrills++;
+                
+                // 检查是否有浓度>=50%的数据点
+                const hasHighConcentration = drill.concentration.some(c => c !== null && c >= 50);
+                
+                if (hasHighConcentration) {
+                    highConcentrationDrills++;
+                    
+                    // 记录倾角
+                    const dip = drill['倾角'];
+                    if (dip !== null) {
+                        const dipKey = dip.toFixed(0) + '°';
+                        dipData[dipKey] = (dipData[dipKey] || 0) + 1;
+                    }
+                }
+            });
+            
+            // 倾角分布饼图
+            const dipLabels = Object.keys(dipData);
+            const dipValues = Object.values(dipData);
+            const dipColors = ['#3498db', '#2ecc71', '#9b59b6', '#f1c40f', '#e74c3c', '#1abc9c'];
+            
+            if (dipLabels.length > 0) {
+                dipPieChart = new Chart(ctx1, {
+                    type: 'pie',
+                    data: {
+                        labels: dipLabels,
+                        datasets: [{
+                            data: dipValues,
+                            backgroundColor: dipColors,
+                            borderColor: 'rgba(255, 255, 255, 0.2)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'right',
+                                labels: {
+                                    color: '#e0e0e0',
+                                    font: {
+                                        size: 11
+                                    }
+                                }
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(44, 62, 80, 0.9)',
+                                bodyFont: {
+                                    size: 12
+                                },
+                                callbacks: {
+                                    label: function(context) {
+                                        const label = context.label || '';
+                                        const value = context.raw || 0;
+                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                        const percentage = Math.round((value / total) * 100);
+                                        return `${label}: ${value} (${percentage}%)`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            } else {
+                ctx1.clearRect(0, 0, ctx1.canvas.width, ctx1.canvas.height);
+                ctx1.font = '14px Arial';
+                ctx1.fillStyle = '#a0d2ff';
+                ctx1.textAlign = 'center';
+                ctx1.fillText('无高浓度钻孔数据', ctx1.canvas.width/2, ctx1.canvas.height/2);
+            }
+            
+            // 高浓度钻孔占比饼图
+            const normalDrills = totalDrills - highConcentrationDrills;
+            
+            if (totalDrills > 0) {
+                concentrationPieChart = new Chart(ctx2, {
+                    type: 'pie',
+                    data: {
+                        labels: ['浓度≥50%', '浓度<50%'],
+                        datasets: [{
+                            data: [highConcentrationDrills, normalDrills],
+                            backgroundColor: ['#e74c3c', '#3498db'],
+                            borderColor: 'rgba(255, 255, 255, 0.2)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'right',
+                                labels: {
+                                    color: '#e0e0e0',
+                                    font: {
+                                        size: 11
+                                    }
+                                }
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(44, 62, 80, 0.9)',
+                                bodyFont: {
+                                    size: 12
+                                },
+                                callbacks: {
+                                    label: function(context) {
+                                        const label = context.label || '';
+                                        const value = context.raw || 0;
+                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                        const percentage = Math.round((value / total) * 100);
+                                        return `${label}: ${value} (${percentage}%)`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            } else {
+                ctx2.clearRect(0, 0, ctx2.canvas.width, ctx2.canvas.height);
+                ctx2.font = '14px Arial';
+                ctx2.fillStyle = '#a0d2ff';
+                ctx2.textAlign = 'center';
+                ctx2.fillText('无钻孔数据', ctx2.canvas.width/2, ctx2.canvas.height/2);
+            }
+        }
+        
+        // 更新图表和表格
+        function updateChartsAndTable() {
+            const startDate = startDateInput.value;
+            const endDate = endDateInput.value;
+            
+            // 显示加载状态
+            tableLoadingOverlay.classList.add('active');
+            alertLoadingOverlay.classList.add('active');
+            
+            // 获取要显示的数据
+            const dataToDisplay = getDataToDisplay();
+            
+            // 更新所有钻孔编号显示
+            document.querySelectorAll('.drill-id').forEach(el => {
+                if (displayMode === 'single' && dataToDisplay.length > 0) {
+                    el.textContent = dataToDisplay[0]['钻孔编号'];
+                } else if (displayMode === 'group') {
+                    el.textContent = currentSelection;
+                }
+            });
+            
+            // 使用setTimeout允许UI更新
+            setTimeout(() => {
+                // 更新图表
+                updateCharts(dataToDisplay, startDate, endDate);
+                
+                // 更新饼图
+                updatePieCharts(dataToDisplay);
+                
+                // 更新表格
+                updateDataTable(dataToDisplay, startDate, endDate);
+                
+                // 更新指标卡
+                updateMetrics(dataToDisplay);
+                
+                // 更新高浓度钻孔表格
+                updateHighConcentrationTable();
+                
+                // 更新超限钻孔计数
+                const todayHighDrills = getTodayHighConcentrationDrills();
+                exceedCountElement.textContent = todayHighDrills.length;
+                
+                // 隐藏加载状态
+                setTimeout(() => {
+                    tableLoadingOverlay.classList.remove('active');
+                    alertLoadingOverlay.classList.remove('active');
+                    updateStatus('系统就绪');
+                }, 300);
+            }, 50);
+        }
+        
+        // 更新指标卡
+        function updateMetrics(dataToDisplay) {
+            // 清空新增元素
+            pressureChangeElement.textContent = '';
+            concentrationChangeElement.textContent = '';
+            flowChangeElement.textContent = '';
+            initialDateElement.textContent = '';
+            maxDateElement.textContent = '';
+            minDateElement.textContent = '';
+            
+            if (dataToDisplay.length === 0 || displayMode === 'group') {
+                avgPressureElement.textContent = '无数据';
+                avgConcentrationElement.textContent = '无数据';
+                avgFlowElement.textContent = '无数据';
+                initialConcentrationElement.textContent = '无数据';
+                maxConcentrationElement.textContent = '无数据';
+                minConcentrationElement.textContent = '无数据';
+                return;
+            }
+            
+            // 计算平均值
+            let totalPressure = 0;
+            let totalConcentration = 0;
+            let totalFlow = 0;
+            let count = 0;
+            let maxConcentration = 0;
+            let minConcentration = 100;
+            let maxConcentrationDate = '';
+            let minConcentrationDate = '';
+            
+            dataToDisplay.forEach(drill => {
+                drill.pressure.forEach((val, index) => {
+                    if (val !== null) {
+                        totalPressure += val;
+                        count++;
+                    }
+                });
+                
+                drill.concentration.forEach((val, index) => {
+                    if (val !== null) {
+                        totalConcentration += val;
+                        
+                        // 记录最高浓度及日期
+                        if (val > maxConcentration) {
+                            maxConcentration = val;
+                            maxConcentrationDate = drill.dates[index];
+                        }
+                        
+                        // 记录最低浓度及日期
+                        if (val < minConcentration) {
+                            minConcentration = val;
+                            minConcentrationDate = drill.dates[index];
+                        }
+                    }
+                });
+                
+                drill.flow.forEach(val => {
+                    if (val !== null) totalFlow += val;
+                });
+            });
+            
+            const avgPressure = count > 0 ? (totalPressure / count).toFixed(2) : 0;
+            const avgConcentration = count > 0 ? (totalConcentration / count).toFixed(2) : 0;
+            const avgFlow = count > 0 ? (totalFlow / count).toFixed(3) : 0;
+            
+            // 更新指标卡
+            avgPressureElement.textContent = `${avgPressure} KPa`;
+            avgConcentrationElement.textContent = `${avgConcentration}%`;
+            avgFlowElement.textContent = `${avgFlow} m³/min`;
+            initialConcentrationElement.textContent = dataToDisplay[0].initialConcentration !== null ? 
+                `${dataToDisplay[0].initialConcentration.toFixed(2)}%` : '无数据';
+            maxConcentrationElement.textContent = maxConcentration !== 0 ? `${maxConcentration.toFixed(2)}%` : '无数据';
+            minConcentrationElement.textContent = minConcentration !== 100 ? `${minConcentration.toFixed(2)}%` : '无数据';
+            
+            // 显示历史极值日期
+            if (dataToDisplay[0].initialDate) {
+                initialDateElement.textContent = `记录日期: ${formatDate(dataToDisplay[0].initialDate)}`;
+            }
+            if (maxConcentrationDate) {
+                maxDateElement.textContent = `记录日期: ${formatDate(maxConcentrationDate)}`;
+            }
+            if (minConcentrationDate) {
+                minDateElement.textContent = `记录日期: ${formatDate(minConcentrationDate)}`;
+            }
+            
+            // 计算最近两次检测的变化值
+            if (displayMode === 'single' && dataToDisplay.length > 0) {
+                const drill = dataToDisplay[0];
+                
+                // 获取最后两个有效数据点
+                let lastIndex = drill.dates.length - 1;
+                let prevIndex = -1;
+                
+                // 查找最后两个有效数据点
+                while (lastIndex >= 0) {
+                    if (drill.pressure[lastIndex] !== null && 
+                        drill.concentration[lastIndex] !== null && 
+                        drill.flow[lastIndex] !== null) {
+                        
+                        if (prevIndex === -1) {
+                            prevIndex = lastIndex;
+                        } else {
+                            break;
+                        }
+                    }
+                    lastIndex--;
+                }
+                
+                // 确保找到了两个有效点
+                if (lastIndex >= 0 && prevIndex >= 0 && lastIndex !== prevIndex) {
+                    const prevDate = drill.dates[prevIndex];
+                    const lastDate = drill.dates[lastIndex];
+                    
+                    // 计算压力变化
+                    const pressureDiff = drill.pressure[prevIndex] - drill.pressure[lastIndex];
+                    if (!isNaN(pressureDiff)) {
+                        updateChangeElement(pressureChangeElement, pressureDiff, 'KPa', prevDate);
+                    }
+                    
+                    // 计算浓度变化
+                    const concentrationDiff = drill.concentration[prevIndex] - drill.concentration[lastIndex];
+                    if (!isNaN(concentrationDiff)) {
+                        updateChangeElement(concentrationChangeElement, concentrationDiff, '%', prevDate);
+                    }
+                    
+                    // 计算流量变化
+                    const flowDiff = drill.flow[prevIndex] - drill.flow[lastIndex];
+                    if (!isNaN(flowDiff)) {
+                        updateChangeElement(flowChangeElement, flowDiff, 'm³/min', prevDate);
+                    }
+                }
+            }
+        }
+        
+        // 更新变化元素显示
+        function updateChangeElement(element, diff, unit, date) {
+            const formattedDate = formatDate(date);
+            
+            if (diff > 0) {
+                element.innerHTML = `<i class="fas fa-arrow-up"></i> 较${formattedDate}上升${Math.abs(diff).toFixed(2)} ${unit}`;
+                element.className = 'metric-change up';
+            } else if (diff < 0) {
+                element.innerHTML = `<i class="fas fa-arrow-down"></i> 较${formattedDate}下降${Math.abs(diff).toFixed(2)} ${unit}`;
+                element.className = 'metric-change down';
+            } else {
+                element.innerHTML = `<i class="fas fa-equals"></i> 较${formattedDate}持平`;
+                element.className = 'metric-change';
+            }
+        }
+        
+        // 格式化日期为YYYY/MM/DD
+        function formatDate(dateStr) {
+            return dateStr.replace(/-/g, '/');
+        }
+        
+        // 更新表格
+        function updateDataTable(dataToDisplay, startDate, endDate) {
+            const fragment = document.createDocumentFragment();
+            
+            if (dataToDisplay.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = `<td colspan="11" style="text-align: center; padding: 30px;">在选定日期范围内没有找到数据</td>`;
+                fragment.appendChild(row);
+            } else {
+                // 按日期排序所有数据
+                const allData = [];
+                dataToDisplay.forEach(drill => {
+                    drill.dates.forEach((date, index) => {
+                        if (date >= startDate && date <= endDate) {
+                            allData.push({
+                                date,
+                                drillId: drill['钻孔编号'],
+                                azimuth: drill['方位'],
+                                dip: drill['倾角'],
+                                depth: drill['孔深'],
+                                initialDate: drill.initialDate,
+                                initialConcentration: drill.initialConcentration,
+                                initialPressure: drill.initialPressure,
+                                pressure: drill.pressure[index],
+                                concentration: drill.concentration[index],
+                                flow: drill.flow[index]
+                            });
+                        }
+                    });
+                });
+                
+                // 按日期排序
+                allData.sort((a, b) => a.date.localeCompare(b.date));
+                
+                // 填充表格
+                allData.forEach(item => {
+                    const row = document.createElement('tr');
+                    
+                    // 如果瓦斯浓度超过85%，添加高亮样式
+                    if (item.concentration > 85) {
+                        row.classList.add('highlight-row');
+                    }
+                    
+                    row.innerHTML = `
+                        <td>${item.date}</td>
+                        <td>${item.drillId}</td>
+                        <td>${item.azimuth !== null ? item.azimuth.toFixed(1) : 'N/A'}</td>
+                        <td>${item.dip !== null ? item.dip.toFixed(1) : 'N/A'}</td>
+                        <td>${item.depth !== null ? item.depth.toFixed(1) : 'N/A'}</td>
+                        <td>${item.initialDate || 'N/A'}</td>
+                        <td>${item.initialConcentration !== null ? item.initialConcentration.toFixed(2) : 'N/A'}</td>
+                        <td>${item.initialPressure !== null ? item.initialPressure.toFixed(2) : 'N/A'}</td>
+                        <td>${item.pressure !== null ? item.pressure.toFixed(2) : 'N/A'}</td>
+                        <td>${item.concentration !== null ? item.concentration.toFixed(2) : 'N/A'}</td>
+                        <td>${item.flow !== null ? item.flow.toFixed(3) : 'N/A'}</td>
+                    `;
+                    fragment.appendChild(row);
+                });
+            }
+            
+            // 清空表格并添加数据
+            dataTableBody.innerHTML = '';
+            dataTableBody.appendChild(fragment);
+        }
+        
+        // 更新高浓度钻孔表格
+        function updateHighConcentrationTable() {
+            const fragment = document.createDocumentFragment();
+            
+            // 获取今日高浓度钻孔
+            const highConcentrationDrills = getTodayHighConcentrationDrills();
+            
+            if (highConcentrationDrills.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = `<td colspan="6" style="text-align: center; padding: 30px;">今日没有发现瓦斯浓度超过30%的钻孔</td>`;
+                fragment.appendChild(row);
+            } else {
+                // 填充表格
+                highConcentrationDrills.forEach(drill => {
+                    const row = document.createElement('tr');
+                    
+                    // 根据浓度级别添加状态标签
+                    let statusClass = '';
+                    let statusText = '';
+                    if (drill.concentration > 85) {
+                        statusClass = 'status-danger';
+                        statusText = '严重超标';
+                    } else if (drill.concentration > 60) {
+                        statusClass = 'status-warning';
+                        statusText = '超标';
+                    } else {
+                        statusClass = 'status-normal';
+                        statusText = '较高';
+                    }
+                    
+                    row.innerHTML = `
+                        <td><span class="red-text">${drill.drillId}</span></td>
+                        <td>${drill.concentration.toFixed(2)}%</td>
+                        <td>${drill.date}</td>
+                        <td><span class="status-tag ${statusClass}">${statusText}</span></td>
+                        <td>${drill.area}</td>
+                        <td>${drill.unit}</td>
+                    `;
+                    fragment.appendChild(row);
+                });
+            }
+            
+            // 清空表格并添加数据
+            highConcentrationTableBody.innerHTML = '';
+            highConcentrationTableBody.appendChild(fragment);
+        }
         
         // 更新图表 - 支持虚线连接缺失数据点
         function updateCharts(dataToDisplay, startDate, endDate) {
@@ -58,25 +2113,6 @@
             const colors = ['#e74c3c', '#3498db', '#2ecc71', '#f1c40f', '#9b59b6', '#1abc9c'];
             const drillIds = new Set(); // 用于跟踪已添加的钻孔ID
             
-            // 确定X轴日期序列（使用日期最全的钻孔）
-            let commonDates = [];
-            
-            if (dataToDisplay.length > 0) {
-                // 找出日期最全的钻孔
-                let maxDateDrill = dataToDisplay[0];
-                let maxDateCount = maxDateDrill.dates.length;
-                
-                for (let i = 1; i < dataToDisplay.length; i++) {
-                    if (dataToDisplay[i].dates.length > maxDateCount) {
-                        maxDateDrill = dataToDisplay[i];
-                        maxDateCount = maxDateDrill.dates.length;
-                    }
-                }
-                
-                // 使用日期最全的钻孔的日期序列作为X轴基础
-                commonDates = maxDateDrill.dates;
-            }
-            
             dataToDisplay.forEach((drill, index) => {
                 // 检查是否已添加此钻孔的标识
                 const drillId = drill['钻孔编号'];
@@ -85,32 +2121,31 @@
                 }
                 drillIds.add(drillId);
                 
-                // 创建数据映射（日期 -> 值）
-                const pressureMap = new Map();
-                const concentrationMap = new Map();
-                const flowMap = new Map();
+                // 过滤数据
+                const pressureData = filterDataByDateRange(
+                    drill.dates, 
+                    drill.pressure, 
+                    startDate, 
+                    endDate
+                );
                 
-                // 填充映射
-                drill.dates.forEach((date, idx) => {
-                    pressureMap.set(date, drill.pressure[idx]);
-                    concentrationMap.set(date, drill.concentration[idx]);
-                    flowMap.set(date, drill.flow[idx]);
-                });
+                const concentrationData = filterDataByDateRange(
+                    drill.dates, 
+                    drill.concentration, 
+                    startDate, 
+                    endDate
+                );
                 
-                // 根据commonDates创建数据序列
-                const pressureData = [];
-                const concentrationData = [];
-                const flowData = [];
-                
-                commonDates.forEach(date => {
-                    pressureData.push(pressureMap.has(date) ? pressureMap.get(date) : null);
-                    concentrationData.push(concentrationMap.has(date) ? concentrationMap.get(date) : null);
-                    flowData.push(flowMap.has(date) ? flowMap.get(date) : null);
-                });
+                const flowData = filterDataByDateRange(
+                    drill.dates, 
+                    drill.flow, 
+                    startDate, 
+                    endDate
+                );
                 
                 // 计算浓度图表y轴范围
-                const concentrationRange = concentrationData.length > 0 ? 
-                    calculateConcentrationYAxisRange(concentrationData) : 
+                const concentrationRange = concentrationData.data.length > 0 ? 
+                    calculateConcentrationYAxisRange(concentrationData.data) : 
                     { min: 0, max: 5 };
                 
                 // 更新范围信息
@@ -158,7 +2193,7 @@
                             // 如果前一个非空值存在，添加到虚线线段
                             if (lastNonNullIndex >= 0) {
                                 currentSegment.data.push({
-                                    x: commonDates[lastNonNullIndex],
+                                    x: pressureData.dates[lastNonNullIndex],
                                     y: data[lastNonNullIndex]
                                 });
                             }
@@ -170,7 +2205,7 @@
                             if (currentSegment.borderDash && currentSegment.data.length > 0) {
                                 // 添加当前点作为虚线终点
                                 currentSegment.data.push({
-                                    x: commonDates[i],
+                                    x: pressureData.dates[i],
                                     y: value
                                 });
                                 segments.push(currentSegment);
@@ -190,7 +2225,7 @@
                             
                             // 添加当前点到当前线段
                             currentSegment.data.push({
-                                x: commonDates[i],
+                                x: pressureData.dates[i],
                                 y: value
                             });
                         }
@@ -207,7 +2242,7 @@
                 // 添加数据集
                 pressureDatasets.push(
                     ...createSegmentedDataset(
-                        pressureData, 
+                        pressureData.data, 
                         colors[index % colors.length], 
                         `${drill['钻孔编号']} 负压`
                     )
@@ -215,7 +2250,7 @@
                 
                 concentrationDatasets.push(
                     ...createSegmentedDataset(
-                        concentrationData, 
+                        concentrationData.data, 
                         colors[index % colors.length], 
                         `${drill['钻孔编号']} 浓度`
                     )
@@ -223,7 +2258,7 @@
                 
                 flowDatasets.push(
                     ...createSegmentedDataset(
-                        flowData, 
+                        flowData.data, 
                         colors[index % colors.length], 
                         `${drill['钻孔编号']} 流量`
                     )
@@ -246,7 +2281,7 @@
                 pressureChart = new Chart(ctx1, {
                     type: 'line',
                     data: {
-                        labels: commonDates,
+                        labels: dataToDisplay[0].dates.filter(date => date >= startDate && date <= endDate),
                         datasets: pressureDatasets
                     },
                     options: {
@@ -304,7 +2339,7 @@
                 concentrationChart = new Chart(ctx2, {
                     type: 'line',
                     data: {
-                        labels: commonDates,
+                        labels: dataToDisplay[0].dates.filter(date => date >= startDate && date <= endDate),
                         datasets: concentrationDatasets
                     },
                     options: {
@@ -401,7 +2436,7 @@
                 flowChart = new Chart(ctx3, {
                     type: 'line',
                     data: {
-                        labels: commonDates,
+                        labels: dataToDisplay[0].dates.filter(date => date >= startDate && date <= endDate),
                         datasets: flowDatasets
                     },
                     options: {
