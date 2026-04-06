@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>营脚煤矿钻孔数据分析系统 | XLSX 数据源 | 增强Tooltip</title>
+    <title>营脚煤矿钻孔数据分析系统 | 饼状图环比分析</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
@@ -40,162 +40,19 @@
         .led.ready { background-color: #2ecc71; }
         .table-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px; }
         .analysis-log { background: #1a2a3a; border-radius: 12px; padding: 20px; margin-top: 15px; border: 1px solid rgba(255,255,255,0.1); }
-        .analysis-log pre { white-space: pre-wrap; word-wrap: break-word; font-family: 'Consolas', monospace; font-size: 0.9rem; color: #a0d2ff; margin: 0; line-height: 1.5; }
         .analysis-log h3 { margin-bottom: 12px; color: #3498db; display: flex; align-items: center; gap: 8px; }
-        .analysis-log h3 i { font-size: 1.2rem; }
+        .pie-container { display: flex; flex-wrap: wrap; gap: 30px; justify-content: space-around; margin-top: 20px; }
+        .pie-item { text-align: center; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 12px; flex: 1; min-width: 200px; }
+        .pie-item canvas { max-height: 200px; margin: 0 auto; }
+        .pie-item p { margin-top: 10px; font-size: 0.9rem; color: #ccc; }
+        .analysis-text { margin-top: 20px; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 8px; font-family: monospace; white-space: pre-wrap; font-size: 0.85rem; }
+        .single-stats { background: rgba(0,0,0,0.3); border-radius: 8px; padding: 15px; margin-top: 15px; }
+        .single-stats p { margin: 8px 0; }
+        .trend-up { color: #2ecc71; }
+        .trend-down { color: #e74c3c; }
+        .trend-equal { color: #f39c12; }
     </style>
 </head>
-    <title>营脚煤矿数据指标面板</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
-        body {
-            background: linear-gradient(135deg, #0c1c29, #1e3c5a);
-            color: #e0e0e0;
-            min-height: 100vh;
-            padding: 20px;
-            background-attachment: fixed;
-        }
-        
-        .container {
-            max-width: 1600px;
-            margin: 0 auto;
-            padding: 25px;
-        }
-        
-        /* 指标容器核心样式 */
-        .metrics-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin: 25px 0;
-        }
-        
-        .metric-box {
-            background: linear-gradient(135deg, #2c3e50, #1a2a3a);
-            color: white;
-            padding: 25px 20px;
-            border-radius: 15px;
-            text-align: center;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-            backdrop-filter: blur(5px);
-        }
-        
-        /* 每个指标框顶部渐变条（差异化配色） */
-        .metric-box::before {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 5px;
-            background: linear-gradient(90deg, #3498db, #2ecc71);
-        }
-        
-        .metric-box:nth-child(1)::before { background: linear-gradient(90deg, #3498db, #2980b9); }
-        .metric-box:nth-child(2)::before { background: linear-gradient(90deg, #2ecc71, #27ae60); }
-        .metric-box:nth-child(3)::before { background: linear-gradient(90deg, #9b59b6, #8e44ad); }
-        .metric-box:nth-child(4)::before { background: linear-gradient(90deg, #f1c40f, #f39c12); }
-        .metric-box:nth-child(5)::before { background: linear-gradient(90deg, #e74c3c, #c0392b); }
-        .metric-box:nth-child(6)::before { background: linear-gradient(90deg, #1abc9c, #16a085); }
-        
-        .metric-box:hover {
-            transform: translateY(-5px) scale(1.02);
-            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
-        }
-        
-        .metric-box > div:first-child {
-            font-size: 1.1rem;
-            color: #a0d2ff;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-        
-        .metric-box > div:first-child::before {
-            font-family: "Font Awesome 6 Free";
-            font-weight: 900;
-            font-size: 1.2rem;
-            opacity: 0.8;
-        }
-        
-        /* 为每个指标添加专属图标 */
-        .metric-box:nth-child(1) > div:first-child::before { content: "\f3fd"; } /* 负压-压力表 */
-        .metric-box:nth-child(2) > div:first-child::before { content: "\f20e"; } /* 浓度-百分比 */
-        .metric-box:nth-child(3) > div:first-child::before { content: "\f043"; } /* 流量-水流 */
-        .metric-box:nth-child(4) > div:first-child::before { content: "\f021"; } /* 始抽-旗帜 */
-        .metric-box:nth-child(5) > div:first-child::before { content: "\f062"; } /* 最高-向上箭头 */
-        .metric-box:nth-child(6) > div:first-child::before { content: "\f063"; } /* 最低-向下箭头 */
-        
-        .metric-value {
-            font-size: 2.5rem;
-            font-weight: bold;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-            transition: color 0.3s ease;
-        }
-        
-        .metric-box:hover .metric-value {
-            color: #ffffff;
-        }
-        
-        /* 响应式适配 */
-        @media (max-width: 1200px) {
-            .metrics-container { grid-template-columns: repeat(3, 1fr); }
-        }
-        
-        @media (max-width: 768px) {
-            .metrics-container { grid-template-columns: repeat(2, 1fr); }
-            .metric-value { font-size: 2rem; }
-        }
-        
-        @media (max-width: 480px) {
-            .metrics-container { grid-template-columns: 1fr; }
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <!-- 美化后的指标容器 -->
-        <div class="metrics-container">
-            <div class="metric-box">
-                <div>平均负压 (KPa)</div>
-                <div class="metric-value" id="avg-pressure">-</div>
-            </div>
-            <div class="metric-box">
-                <div>平均瓦斯浓度 (%)</div>
-                <div class="metric-value" id="avg-concentration">-</div>
-            </div>
-            <div class="metric-box">
-                <div>平均混合流量 (m³/min)</div>
-                <div class="metric-value" id="avg-flow">-</div>
-            </div>
-            <div class="metric-box" id="initial-conc-box">
-                <div>始抽浓度 (%)</div>
-                <div class="metric-value" id="initial-concentration">-</div>
-            </div>
-            <div class="metric-box">
-                <div>最高浓度 (%)</div>
-                <div class="metric-value" id="max-concentration">-</div>
-            </div>
-            <div class="metric-box">
-                <div>最低浓度 (%)</div>
-                <div class="metric-value" id="min-concentration">-</div>
-            </div>
-        </div>
-    </div>
-</body>
 <body>
 <div class="system-loading" id="system-loading">
     <div class="loading-spinner"></div>
@@ -205,10 +62,11 @@
     <div id="load-detail" class="debug-info"></div>
 </div>
 <div class="status-indicator"><div class="led" id="status-led"></div><span id="status-text">加载中</span></div>
+
 <div class="container" id="main-container" style="display: none;">
     <div class="header">
         <h1><i class="fas fa-chart-line"></i> 营脚煤矿高位钻孔数据分析系统</h1>
-        <p>数据源：data.xlsx | 动态纵坐标 | 自动环比分析 | 悬停显示钻孔参数</p>
+        <p>数据源：data.xlsx | 动态纵坐标 | 饼状图环比分析</p>
         <div style="display:flex; justify-content:center; gap:20px; margin-top:12px; flex-wrap:wrap;">
             <div><i class="fas fa-database"></i> 钻孔总数: <span id="total-drills">0</span></div>
             <div><i class="fas fa-chart-simple"></i> 检测记录数: <span id="total-measurements">0</span></div>
@@ -282,9 +140,10 @@
         </div>
     </div>
 
-    <div class="analysis-log">
-        <h3><i class="fas fa-chart-line"></i> 钻孔浓度与流量变化分析（环比）</h3>
-        <pre id="analysis-content">正在分析中，请稍候...</pre>
+    <!-- 分析日志区域（饼图+文字） -->
+    <div class="analysis-log" id="analysis-log">
+        <h3><i class="fas fa-chart-pie"></i> 瓦斯浓度环比分析</h3>
+        <div id="analysis-content"></div>
     </div>
 </div>
 
@@ -343,6 +202,7 @@
         let drillMap = new Map();
         let concentrationChart, pressureChart, flowChart;
         let currentShowHistory = false;
+        let pieCharts = []; // 存储饼图实例
 
         function log(msg, isError = false) {
             const div = document.createElement('div');
@@ -598,7 +458,7 @@
             return { min: min === Infinity ? 0 : min, max: max === -Infinity ? 0 : max };
         }
 
-        // 自定义tooltip回调，显示钻孔固定参数 + 当前检测数据
+        // 自定义tooltip
         function createTooltipCallback(chartType) {
             return function(context) {
                 const dataset = context.dataset;
@@ -798,13 +658,7 @@
                     options: {
                         responsive: true, maintainAspectRatio: false,
                         scales: { y: { title: { display: true, text: '浓度 (%)' }, min: concYmin, max: concYmax } },
-                        plugins: {
-                            tooltip: {
-                                callbacks: {
-                                    label: createTooltipCallback('concentration')
-                                }
-                            }
-                        }
+                        plugins: { tooltip: { callbacks: { label: createTooltipCallback('concentration') } } }
                     }
                 });
             }
@@ -814,13 +668,7 @@
                     options: {
                         responsive: true, maintainAspectRatio: false,
                         scales: { y: { title: { display: true, text: '负压 (KPa)' }, min: pressYmin, max: pressYmax } },
-                        plugins: {
-                            tooltip: {
-                                callbacks: {
-                                    label: createTooltipCallback('pressure')
-                                }
-                            }
-                        }
+                        plugins: { tooltip: { callbacks: { label: createTooltipCallback('pressure') } } }
                     }
                 });
             }
@@ -830,13 +678,7 @@
                     options: {
                         responsive: true, maintainAspectRatio: false,
                         scales: { y: { title: { display: true, text: '流量 (m³/min)' }, min: flowYmin, max: flowYmax } },
-                        plugins: {
-                            tooltip: {
-                                callbacks: {
-                                    label: createTooltipCallback('flow')
-                                }
-                            }
-                        }
+                        plugins: { tooltip: { callbacks: { label: createTooltipCallback('flow') } } }
                     }
                 });
             }
@@ -877,21 +719,19 @@
             }
         }
 
-        function generateAnalysisLog(drillDataPoints, location, mode, selectedDrill) {
-            if (!drillDataPoints.length) {
-                return `📊 当前筛选条件：地点=${location}，模式=${mode === 'single' ? `单孔 ${selectedDrill}` : '全部钻孔'}\n暂无检测数据，无法分析。`;
-            }
+        // 计算每个钻孔的环比变化（浓度）
+        function calculateDrillTrends(drillDataPoints) {
             const now = new Date();
-            const todayStr = now.toISOString().slice(0,10);
             const oneWeekAgo = new Date(now); oneWeekAgo.setDate(now.getDate() - 7);
             const oneMonthAgo = new Date(now); oneMonthAgo.setMonth(now.getMonth() - 1);
             const threeMonthsAgo = new Date(now); threeMonthsAgo.setMonth(now.getMonth() - 3);
             
-            let output = `📊 分析基准：${todayStr}（最近检测日将自动匹配实际数据）\n`;
-            output += `📍 抽采地点：${location}\n`;
-            output += `🔍 显示模式：${mode === 'single' ? `单孔 ${selectedDrill}` : '全部钻孔'}\n`;
-            output += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
-
+            const trends = {
+                week: { up: 0, down: 0, equal: 0, details: [] },
+                month: { up: 0, down: 0, equal: 0, details: [] },
+                quarter: { up: 0, down: 0, equal: 0, details: [] }
+            };
+            
             for (let item of drillDataPoints) {
                 const drillId = item.drillId;
                 const points = item.filteredPoints;
@@ -900,60 +740,164 @@
                 const latest = sorted[sorted.length - 1];
                 const latestDate = latest.date;
                 const latestConc = latest.concentration;
-                const latestFlow = latest.flow;
                 
                 const periods = [
-                    { name: "一周前", targetDate: oneWeekAgo, label: "环比上周" },
-                    { name: "一月前", targetDate: oneMonthAgo, label: "环比上月" },
-                    { name: "三月前", targetDate: threeMonthsAgo, label: "环比上季度" }
+                    { name: 'week', targetDate: oneWeekAgo, label: '环比上周' },
+                    { name: 'month', targetDate: oneMonthAgo, label: '环比上月' },
+                    { name: 'quarter', targetDate: threeMonthsAgo, label: '环比上季度' }
                 ];
                 
-                let concAnalysis = "", flowAnalysis = "";
-                for (let period of periods) {
-                    const targetDateStr = period.targetDate.toISOString().slice(0,10);
+                for (let p of periods) {
+                    const targetDateStr = p.targetDate.toISOString().slice(0,10);
                     let bestPoint = null;
                     let bestDiff = Infinity;
-                    for (let p of sorted) {
-                        if (p.date <= targetDateStr) {
-                            const diff = Math.abs(new Date(p.date) - period.targetDate);
+                    for (let pt of sorted) {
+                        if (pt.date <= targetDateStr) {
+                            const diff = Math.abs(new Date(pt.date) - p.targetDate);
                             if (diff < bestDiff) {
                                 bestDiff = diff;
-                                bestPoint = p;
+                                bestPoint = pt;
                             }
                         }
                     }
                     if (bestPoint) {
                         const oldConc = bestPoint.concentration;
-                        const oldFlow = bestPoint.flow;
-                        const concChange = ((latestConc - oldConc) / oldConc * 100).toFixed(1);
-                        const flowChange = ((latestFlow - oldFlow) / oldFlow * 100).toFixed(1);
-                        concAnalysis += `  ${period.label}: ${concChange}% (${oldConc}% → ${latestConc}%) `;
-                        flowAnalysis += `  ${period.label}: ${flowChange}% (${oldFlow} → ${latestFlow}) `;
+                        const change = ((latestConc - oldConc) / oldConc * 100).toFixed(1);
+                        let trend = 'equal';
+                        if (parseFloat(change) > 0) trend = 'up';
+                        else if (parseFloat(change) < 0) trend = 'down';
+                        trends[p.name][trend]++;
+                        trends[p.name].details.push({ drillId, change, oldConc, newConc: latestConc, date: latestDate, compareDate: bestPoint.date });
                     } else {
-                        concAnalysis += `  ${period.label}: 数据不足 `;
-                        flowAnalysis += `  ${period.label}: 数据不足 `;
+                        // 无数据则忽略
                     }
                 }
-                output += `\n🔹 钻孔 ${drillId}（最新检测: ${latestDate}）\n`;
-                output += `   📈 瓦斯浓度变化: ${concAnalysis}\n`;
-                output += `   💧 混合流量变化: ${flowAnalysis}\n`;
-                output += `   ────────────────────────────\n`;
             }
-            output += `\n✅ 分析说明：环比增长/减少基于最新检测日对比目标周期前最接近的检测日数据。若显示“数据不足”表示该周期内无有效检测记录。`;
-            return output;
+            return trends;
+        }
+
+        // 生成饼图
+        function renderPieCharts(trends, mode, selectedDrill) {
+            const container = dom.analysisContent;
+            if (!container) return;
+            container.innerHTML = '';
+            
+            if (mode === 'single') {
+                // 单孔模式：显示详细文字说明，不生成饼图
+                const drillData = trends.week.details.find(d => d.drillId === selectedDrill);
+                if (!drillData) {
+                    container.innerHTML = `<div class="single-stats"><p>暂无足够的环比数据</p></div>`;
+                    return;
+                }
+                // 从 trends 中提取该钻孔的三个周期数据
+                const weekDetail = trends.week.details.find(d => d.drillId === selectedDrill);
+                const monthDetail = trends.month.details.find(d => d.drillId === selectedDrill);
+                const quarterDetail = trends.quarter.details.find(d => d.drillId === selectedDrill);
+                
+                let html = `<div class="single-stats">
+                    <h4><i class="fas fa-chart-line"></i> 钻孔 ${selectedDrill} 浓度环比分析</h4>`;
+                if (weekDetail) {
+                    const changeClass = parseFloat(weekDetail.change) >= 0 ? 'trend-up' : 'trend-down';
+                    const arrow = parseFloat(weekDetail.change) >= 0 ? '↑' : '↓';
+                    html += `<p>📅 环比上周：<span class="${changeClass}">${arrow} ${Math.abs(weekDetail.change)}%</span> (${weekDetail.oldConc}% → ${weekDetail.newConc}%)</p>`;
+                } else html += `<p>📅 环比上周：数据不足</p>`;
+                if (monthDetail) {
+                    const changeClass = parseFloat(monthDetail.change) >= 0 ? 'trend-up' : 'trend-down';
+                    const arrow = parseFloat(monthDetail.change) >= 0 ? '↑' : '↓';
+                    html += `<p>📅 环比上月：<span class="${changeClass}">${arrow} ${Math.abs(monthDetail.change)}%</span> (${monthDetail.oldConc}% → ${monthDetail.newConc}%)</p>`;
+                } else html += `<p>📅 环比上月：数据不足</p>`;
+                if (quarterDetail) {
+                    const changeClass = parseFloat(quarterDetail.change) >= 0 ? 'trend-up' : 'trend-down';
+                    const arrow = parseFloat(quarterDetail.change) >= 0 ? '↑' : '↓';
+                    html += `<p>📅 环比上季度：<span class="${changeClass}">${arrow} ${Math.abs(quarterDetail.change)}%</span> (${quarterDetail.oldConc}% → ${quarterDetail.newConc}%)</p>`;
+                } else html += `<p>📅 环比上季度：数据不足</p>`;
+                html += `<p class="text-muted" style="margin-top:10px;">* 对比基于最新检测日（${weekDetail?.date || '-'}）与各周期前最接近的检测日数据。</p>`;
+                html += `</div>`;
+                container.innerHTML = html;
+                return;
+            }
+            
+            // 全部模式：生成饼图
+            const periods = [
+                { key: 'week', label: '环比上周', data: trends.week },
+                { key: 'month', label: '环比上月', data: trends.month },
+                { key: 'quarter', label: '环比上季度', data: trends.quarter }
+            ];
+            
+            const pieDiv = document.createElement('div');
+            pieDiv.className = 'pie-container';
+            for (let p of periods) {
+                const total = p.data.up + p.data.down + p.data.equal;
+                if (total === 0) continue;
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'pie-item';
+                const canvasId = `pie-${p.key}`;
+                itemDiv.innerHTML = `<h4>${p.label}</h4><canvas id="${canvasId}" width="200" height="200"></canvas>
+                                     <p>📈 上升: ${p.data.up} 孔<br>📉 下降: ${p.data.down} 孔<br>➡️ 持平: ${p.data.equal} 孔</p>`;
+                pieDiv.appendChild(itemDiv);
+                
+                // 延迟绘制饼图，等待 canvas 加入 DOM
+                setTimeout(() => {
+                    const ctx = document.getElementById(canvasId);
+                    if (ctx) {
+                        new Chart(ctx, {
+                            type: 'pie',
+                            data: {
+                                labels: ['上升', '下降', '持平'],
+                                datasets: [{
+                                    data: [p.data.up, p.data.down, p.data.equal],
+                                    backgroundColor: ['#2ecc71', '#e74c3c', '#f39c12'],
+                                    borderWidth: 0
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: true,
+                                plugins: { legend: { position: 'bottom', labels: { color: '#e0e0e0' } } }
+                            }
+                        });
+                    }
+                }, 50);
+            }
+            container.appendChild(pieDiv);
+            
+            // 添加详细文字说明
+            const textDiv = document.createElement('div');
+            textDiv.className = 'analysis-text';
+            let text = `📊 分析说明：\n`;
+            for (let p of periods) {
+                const total = p.data.up + p.data.down + p.data.equal;
+                if (total === 0) text += `\n${p.label}：无足够数据对比。`;
+                else {
+                    text += `\n${p.label}：共 ${total} 个钻孔有可比数据，其中上升 ${p.data.up} 个，下降 ${p.data.down} 个，持平 ${p.data.equal} 个。`;
+                    // 展示部分明细（最多5个）
+                    const details = p.data.details.slice(0, 5);
+                    if (details.length) {
+                        text += ` 示例：`;
+                        details.forEach(d => {
+                            const arrow = parseFloat(d.change) >= 0 ? '↑' : '↓';
+                            text += ` ${d.drillId} ${arrow} ${Math.abs(d.change)}%`;
+                        });
+                        if (p.data.details.length > 5) text += ` 等共${p.data.details.length}个钻孔。`;
+                        else text += `。`;
+                    }
+                }
+            }
+            text += `\n\n✅ 环比计算基于最新检测日与各周期前最接近的检测日数据，上升/下降以百分比变化正负判定。`;
+            textDiv.innerText = text;
+            container.appendChild(textDiv);
         }
 
         function refreshAll() {
             const drillDataPoints = getFilteredPoints();
             renderCharts(drillDataPoints);
             renderDataTable(drillDataPoints);
-            if (dom.analysisContent) {
-                const location = dom.locationSelect ? dom.locationSelect.value : '';
-                const mode = dom.displayRange ? dom.displayRange.value : 'all';
-                const selectedDrill = dom.drillSelect ? dom.drillSelect.value : '';
-                const analysisText = generateAnalysisLog(drillDataPoints, location, mode, selectedDrill);
-                dom.analysisContent.innerText = analysisText;
-            }
+            
+            // 生成分析内容（饼图+文字）
+            const mode = dom.displayRange ? dom.displayRange.value : 'all';
+            const selectedDrill = dom.drillSelect ? dom.drillSelect.value : '';
+            const trends = calculateDrillTrends(drillDataPoints);
+            renderPieCharts(trends, mode, selectedDrill);
         }
 
         function bindEvents() {
