@@ -6,6 +6,7 @@
     <title>营脚煤矿钻孔数据分析系统 | XLSX 数据源</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background: linear-gradient(135deg, #0c1c29, #1e3c5a); color: #e0e0e0; min-height: 100vh; padding: 20px; }
@@ -39,6 +40,7 @@
         .led.ready { background-color: #2ecc71; }
         .table-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px; }
         .error-msg { color: #e74c3c; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 8px; margin-top: 10px; }
+        .debug-info { font-size: 12px; color: #aaa; margin-top: 10px; text-align: left; max-height: 200px; overflow-y: auto; background: rgba(0,0,0,0.3); padding: 8px; border-radius: 8px; font-family: monospace; }
     </style>
 </head>
 <body>
@@ -47,7 +49,7 @@
     <h3>营脚煤矿数据分析系统</h3>
     <p id="load-status-text">正在加载 data.xlsx ...</p>
     <div class="progress-bar"><div class="progress" id="loading-progress"></div></div>
-    <div id="load-detail" class="debug-info" style="font-size:12px; color:#aaa; margin-top:10px;"></div>
+    <div id="load-detail" class="debug-info"></div>
 </div>
 <div class="status-indicator"><div class="led" id="status-led"></div><span id="status-text">加载中</span></div>
 
@@ -111,7 +113,7 @@
                 <button id="show-history-btn" class="btn-history">历史检测</button>
             </div>
         </div>
-        <div class="data-table-container"><table><thead>汽<th>抽采地点</th><th>钻孔编号</th><th>检测日期</th><th>负压(KPa)</th><th>瓦斯浓度(%)</th><th>混合流量(m³/min)</th></thead><tbody id="data-table-body"></tbody></table></div>
+        <div class="data-table-container"></table><thead>汽<th>抽采地点</th><th>钻孔编号</th><th>检测日期</th><th>负压(KPa)</th><th>瓦斯浓度(%)</th><th>混合流量(m³/min)</th></thead><tbody id="data-table-body"></tbody></table></div>
     </div>
     <div class="card">
         <h3>钻孔固定参数一览</h3>
@@ -185,17 +187,19 @@
                 let parts = str.split('/');
                 if (parts.length === 3) return `${parts[0]}-${parts[1].padStart(2,'0')}-${parts[2].padStart(2,'0')}`;
             }
-            // 如果是 Excel 序列数字日期（例如 44562），则转换
-            if (!isNaN(str) && str.length > 4) {
-                let date = new Date((parseFloat(str) - 25569) * 86400000);
-                if (!isNaN(date.getTime())) {
-                    return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+            // Excel 序列日期转换（简单处理）
+            if (!isNaN(str) && str.length > 4 && !str.includes('-')) {
+                let num = parseFloat(str);
+                if (num > 40000 && num < 50000) {
+                    let date = new Date((num - 25569) * 86400000);
+                    if (!isNaN(date.getTime())) {
+                        return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+                    }
                 }
             }
             return str;
         }
 
-        // 解析 XLSX 文件
         async function loadXLSX() {
             try {
                 log('正在加载 data.xlsx ...');
@@ -205,19 +209,16 @@
                 const workbook = XLSX.read(arrayBuffer, { type: 'array' });
                 log(`成功读取 XLSX，工作表: ${workbook.SheetNames.join(', ')}`);
                 
-                // 获取钻孔参数表（Sheet1 或名为 drills）
                 let drillSheet = workbook.Sheets[workbook.SheetNames[0]];
                 if (workbook.SheetNames.includes('drills')) drillSheet = workbook.Sheets['drills'];
                 const drillRows = XLSX.utils.sheet_to_json(drillSheet, { defval: "" });
                 log(`钻孔参数表解析到 ${drillRows.length} 行`);
                 
-                // 获取检测数据表（Sheet2 或名为 measurements）
                 let measSheet = workbook.Sheets[workbook.SheetNames[1]];
                 if (workbook.SheetNames.includes('measurements')) measSheet = workbook.Sheets['measurements'];
                 const measRows = XLSX.utils.sheet_to_json(measSheet, { defval: "" });
                 log(`检测数据表解析到 ${measRows.length} 行`);
                 
-                // 构建 drills
                 drills = [];
                 for (let row of drillRows) {
                     const location = row['抽采地点'];
@@ -238,7 +239,6 @@
                 }
                 log(`✅ 加载 ${drills.length} 个钻孔`);
                 
-                // 构建 measurements
                 measurements = [];
                 for (let row of measRows) {
                     const location = row['抽采地点'];
@@ -487,7 +487,6 @@
             dom.pressureChartTitle.innerText = `负压变化曲线 - ${titleSuffix}`;
             dom.flowChartTitle.innerText = `混合流量变化曲线 - ${titleSuffix}`;
 
-            // 动态纵坐标
             let concYmin = 0, concYmax = 100;
             if (mode === 'single' && drillDataPoints.length === 1) {
                 const concValues = drillDataPoints[0].filteredPoints.map(p => p.concentration);
@@ -612,38 +611,63 @@
         }
 
         async function init() {
-            dom.loadingProgress.style.width = '20%';
-            const ok = await loadXLSX();
-            dom.loadingProgress.style.width = '50%';
-            if (!ok || drills.length === 0 || measurements.length === 0) {
-                log('❌ 数据加载失败或数据为空，请确保 data.xlsx 文件存在且格式正确', true);
-                dom.loadStatusText.innerText = '数据加载失败';
+            try {
+                dom.loadingProgress.style.width = '20%';
+                const ok = await loadXLSX();
+                dom.loadingProgress.style.width = '50%';
+                if (!ok || drills.length === 0 || measurements.length === 0) {
+                    log('❌ 数据加载失败或数据为空，请检查 data.xlsx 文件格式', true);
+                    dom.loadStatusText.innerText = '数据加载失败';
+                    setTimeout(() => {
+                        dom.loadingDiv.classList.add('hidden');
+                        document.body.classList.remove('loading-active');
+                        dom.mainContainer.style.display = 'block';
+                        dom.statusText.innerText = '数据加载失败';
+                    }, 2000);
+                    return;
+                }
+                dom.loadingProgress.style.width = '70%';
+                drillMap = buildDrillMap();
+                updateLocationSelect();
+                updateDrillSelect(dom.locationSelect.value);
+                setDefaultDateRange();
+                renderDrillsTable();
+                bindEvents();
+                refreshAll();
+                dom.loadingProgress.style.width = '100%';
+                dom.loadStatusText.innerText = '数据加载完成';
+                // 确保所有渲染完成后隐藏加载层
                 setTimeout(() => {
                     dom.loadingDiv.classList.add('hidden');
                     document.body.classList.remove('loading-active');
+                    dom.mainContainer.style.display = 'block';
+                    dom.statusLed.classList.add('ready');
+                    dom.statusText.innerText = '系统就绪';
+                }, 500);
+            } catch (err) {
+                log(`初始化过程出错: ${err.message}`, true);
+                console.error(err);
+                dom.loadStatusText.innerText = '初始化失败';
+                setTimeout(() => {
+                    dom.loadingDiv.classList.add('hidden');
+                    document.body.classList.remove('loading-active');
+                    dom.mainContainer.style.display = 'block';
+                    dom.statusText.innerText = '系统错误';
                 }, 2000);
-                return;
             }
-            dom.loadingProgress.style.width = '70%';
-            drillMap = buildDrillMap();
-            updateLocationSelect();
-            updateDrillSelect(dom.locationSelect.value);
-            setDefaultDateRange();
-            renderDrillsTable();
-            bindEvents();
-            refreshAll();
-            dom.loadingProgress.style.width = '100%';
-            dom.loadStatusText.innerText = '数据加载完成';
-            setTimeout(() => {
-                dom.loadingDiv.classList.add('hidden');
-                document.body.classList.remove('loading-active');
-                dom.mainContainer.style.display = 'block';
-                dom.statusLed.classList.add('ready');
-                dom.statusText.innerText = '系统就绪';
-            }, 500);
         }
 
-        init();
+        // 确保 Chart.js 已加载
+        if (typeof Chart === 'undefined') {
+            log('❌ Chart.js 未加载，请检查网络连接', true);
+            dom.loadStatusText.innerText = 'Chart.js 加载失败';
+            setTimeout(() => {
+                dom.loadingDiv.classList.add('hidden');
+                dom.mainContainer.style.display = 'block';
+            }, 2000);
+        } else {
+            init();
+        }
     })();
 </script>
 </body>
