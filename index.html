@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>营脚煤矿钻孔数据分析系统 | XLSX 数据源</title>
+    <title>营脚煤矿钻孔数据分析系统 | XLSX 数据源 | 自动环比分析</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
@@ -39,8 +39,10 @@
         .led { width: 10px; height: 10px; border-radius: 50%; background-color: #f1c40f; }
         .led.ready { background-color: #2ecc71; }
         .table-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px; }
-        .error-msg { color: #e74c3c; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 8px; margin-top: 10px; }
-        .debug-info { font-size: 12px; color: #aaa; margin-top: 10px; text-align: left; max-height: 200px; overflow-y: auto; background: rgba(0,0,0,0.3); padding: 8px; border-radius: 8px; font-family: monospace; }
+        .analysis-log { background: #1a2a3a; border-radius: 12px; padding: 20px; margin-top: 15px; border: 1px solid rgba(255,255,255,0.1); }
+        .analysis-log pre { white-space: pre-wrap; word-wrap: break-word; font-family: 'Consolas', monospace; font-size: 0.9rem; color: #a0d2ff; margin: 0; line-height: 1.5; }
+        .analysis-log h3 { margin-bottom: 12px; color: #3498db; display: flex; align-items: center; gap: 8px; }
+        .analysis-log h3 i { font-size: 1.2rem; }
     </style>
 </head>
 <body>
@@ -56,7 +58,7 @@
 <div class="container" id="main-container" style="display: none;">
     <div class="header">
         <h1><i class="fas fa-chart-line"></i> 营脚煤矿高位钻孔数据分析系统</h1>
-        <p>数据源：data.xlsx (Sheet1:钻孔参数, Sheet2:检测数据) | 动态纵坐标</p>
+        <p>数据源：data.xlsx (Sheet1:钻孔参数, Sheet2:检测数据) | 动态纵坐标 | 自动环比分析</p>
         <div style="display:flex; justify-content:center; gap:20px; margin-top:12px; flex-wrap:wrap;">
             <div><i class="fas fa-database"></i> 钻孔总数: <span id="total-drills">0</span></div>
             <div><i class="fas fa-chart-simple"></i> 检测记录数: <span id="total-measurements">0</span></div>
@@ -129,11 +131,17 @@
             </table>
         </div>
     </div>
+
+    <!-- 自动分析日志面板 -->
+    <div class="analysis-log">
+        <h3><i class="fas fa-chart-line"></i> 钻孔浓度与流量变化分析（环比）</h3>
+        <pre id="analysis-content">正在分析中，请稍候...</pre>
+    </div>
 </div>
 
 <script>
     (function(){
-        // 安全获取 DOM 元素，并给出警告
+        // 安全获取 DOM 元素
         function getElement(id) {
             const el = document.getElementById(id);
             if (!el) console.warn(`DOM 元素 #${id} 未找到`);
@@ -178,7 +186,8 @@
             paramStartConc: getElement('param-start-conc'),
             paramStartPressure: getElement('param-start-pressure'),
             paramStartFlow: getElement('param-start-flow'),
-            initialConcBox: getElement('initial-conc-box')
+            initialConcBox: getElement('initial-conc-box'),
+            analysisContent: getElement('analysis-content')
         };
 
         let drills = [];
@@ -187,6 +196,7 @@
         let concentrationChart, pressureChart, flowChart;
         let currentShowHistory = false;
 
+        // 日志辅助
         function log(msg, isError = false) {
             const div = document.createElement('div');
             div.textContent = msg;
@@ -196,6 +206,7 @@
             console.log(msg);
         }
 
+        // 日期标准化
         function normalizeDate(dateStr) {
             if (!dateStr) return '';
             let str = String(dateStr).trim();
@@ -215,6 +226,7 @@
             return str;
         }
 
+        // 解析 XLSX
         async function loadXLSX() {
             try {
                 log('正在加载 data.xlsx ...');
@@ -281,6 +293,7 @@
             }
         }
 
+        // 构建 drillMap（含始抽点）
         function buildDrillMap() {
             const map = new Map();
             for (let m of measurements) {
@@ -307,6 +320,7 @@
             return map;
         }
 
+        // 更新下拉框等 UI
         function updateLocationSelect() {
             if (!dom.locationSelect) return;
             const locs = [...new Set(drills.map(d => d.location))].sort();
@@ -398,6 +412,7 @@
             }
         }
 
+        // 获取当前筛选后的数据点（用于图表和分析）
         function getFilteredPoints() {
             const location = dom.locationSelect ? dom.locationSelect.value : '';
             const mode = dom.displayRange ? dom.displayRange.value : 'all';
@@ -430,6 +445,97 @@
             return drillDataPoints.filter(item => item.filteredPoints.length > 0);
         }
 
+        // 辅助：从点数组中找最接近目标日期的点（不超过目标日期）
+        function findNearestPoint(points, targetDate) {
+            if (!points.length) return null;
+            let best = null;
+            let bestDiff = Infinity;
+            for (let p of points) {
+                const diff = Math.abs(new Date(p.date) - new Date(targetDate));
+                if (diff < bestDiff && p.date <= targetDate) {
+                    bestDiff = diff;
+                    best = p;
+                }
+            }
+            return best;
+        }
+
+        // 生成分析日志
+        function generateAnalysisLog(drillDataPoints, location, mode, selectedDrill) {
+            if (!drillDataPoints.length) {
+                return `📊 当前筛选条件：地点=${location}，模式=${mode === 'single' ? `单孔 ${selectedDrill}` : '全部钻孔'}\n暂无检测数据，无法分析。`;
+            }
+            
+            const now = new Date();
+            const todayStr = now.toISOString().slice(0,10);
+            const oneWeekAgo = new Date(now); oneWeekAgo.setDate(now.getDate() - 7);
+            const oneMonthAgo = new Date(now); oneMonthAgo.setMonth(now.getMonth() - 1);
+            const threeMonthsAgo = new Date(now); threeMonthsAgo.setMonth(now.getMonth() - 3);
+            
+            let output = `📊 分析基准：${todayStr}（最近检测日将自动匹配实际数据）\n`;
+            output += `📍 抽采地点：${location}\n`;
+            output += `🔍 显示模式：${mode === 'single' ? `单孔 ${selectedDrill}` : '全部钻孔'}\n`;
+            output += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+
+            for (let item of drillDataPoints) {
+                const drillId = item.drillId;
+                const points = item.filteredPoints;
+                if (points.length === 0) continue;
+                
+                // 按日期排序
+                const sorted = [...points].sort((a,b) => a.date.localeCompare(b.date));
+                const latest = sorted[sorted.length - 1];
+                const latestDate = latest.date;
+                const latestConc = latest.concentration;
+                const latestFlow = latest.flow;
+                
+                // 定义要比较的周期
+                const periods = [
+                    { name: "一周前", targetDate: oneWeekAgo, label: "环比上周" },
+                    { name: "一月前", targetDate: oneMonthAgo, label: "环比上月" },
+                    { name: "三月前", targetDate: threeMonthsAgo, label: "环比上季度" }
+                ];
+                
+                let concAnalysis = "";
+                let flowAnalysis = "";
+                
+                for (let period of periods) {
+                    const targetDateStr = period.targetDate.toISOString().slice(0,10);
+                    // 找到距离目标日期最近的检测点（不超过目标日期）
+                    let bestPoint = null;
+                    let bestDiff = Infinity;
+                    for (let p of sorted) {
+                        if (p.date <= targetDateStr) {
+                            const diff = Math.abs(new Date(p.date) - period.targetDate);
+                            if (diff < bestDiff) {
+                                bestDiff = diff;
+                                bestPoint = p;
+                            }
+                        }
+                    }
+                    if (bestPoint) {
+                        const oldConc = bestPoint.concentration;
+                        const oldFlow = bestPoint.flow;
+                        const concChange = ((latestConc - oldConc) / oldConc * 100).toFixed(1);
+                        const flowChange = ((latestFlow - oldFlow) / oldFlow * 100).toFixed(1);
+                        concAnalysis += `  ${period.label}: ${concChange}% (${oldConc}% → ${latestConc}%) `;
+                        flowAnalysis += `  ${period.label}: ${flowChange}% (${oldFlow} → ${latestFlow}) `;
+                    } else {
+                        concAnalysis += `  ${period.label}: 数据不足 `;
+                        flowAnalysis += `  ${period.label}: 数据不足 `;
+                    }
+                }
+                
+                output += `\n🔹 钻孔 ${drillId}（最新检测: ${latestDate}）\n`;
+                output += `   📈 瓦斯浓度变化: ${concAnalysis}\n`;
+                output += `   💧 混合流量变化: ${flowAnalysis}\n`;
+                output += `   ────────────────────────────\n`;
+            }
+            output += `\n✅ 分析说明：环比增长/减少基于最新检测日对比目标周期前最接近的检测日数据。若显示“数据不足”表示该周期内无有效检测记录。`;
+            return output;
+        }
+
+        // 图表渲染函数（简化，保持原有逻辑）
         function getMinMax(values) {
             let min = Infinity, max = -Infinity;
             for (let v of values) {
@@ -611,10 +717,20 @@
             }
         }
 
+        // 核心刷新：图表 + 表格 + 分析日志
         function refreshAll() {
             const drillDataPoints = getFilteredPoints();
             renderCharts(drillDataPoints);
             renderDataTable(drillDataPoints);
+            
+            // 生成分析日志
+            if (dom.analysisContent) {
+                const location = dom.locationSelect ? dom.locationSelect.value : '';
+                const mode = dom.displayRange ? dom.displayRange.value : 'all';
+                const selectedDrill = dom.drillSelect ? dom.drillSelect.value : '';
+                const analysisText = generateAnalysisLog(drillDataPoints, location, mode, selectedDrill);
+                dom.analysisContent.innerText = analysisText;
+            }
         }
 
         function bindEvents() {
